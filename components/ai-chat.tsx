@@ -10,7 +10,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { useSession } from "@/hooks/useSession"
 import { useWebSocket } from "@/hooks/useWebSocket"
 
-// Random ID oluşturmak için basit bir fonksiyon
+// Random ID generator
 function generateId() {
   return Math.random().toString(36).substring(2) + Date.now().toString(36)
 }
@@ -39,10 +39,10 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
   const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
-  // Session yönetimi
+  // Session management
   const { sessionId, isInitialized } = useSession()
 
-  // WebSocket bağlantısı
+  // WebSocket connection
   useWebSocket(sessionId, isInitialized, (config) => {
     if (config && typeof config === 'object') {
       console.log('Received config update:', config)
@@ -59,7 +59,7 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
   }
 
   useEffect(() => {
-    // Her yeni mesajda scroll yap
+    // Scroll to bottom on new message
     if (messages.length > 0) {
       scrollToBottom()
     }
@@ -69,7 +69,7 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
     if (!message.trim()) return
 
     try {
-      // Kullanıcı mesajını ekle
+      // Add user message
       setMessages(prev => [...prev, { 
         id: generateId(),
         role: 'user', 
