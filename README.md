@@ -17,6 +17,11 @@
 
 ## ✨ Features
 
+### 🔗 Multi-Wallet Support
+- **EVM Wallets**: MetaMask, WalletConnect via RainbowKit
+- **NEAR Wallet**: Chain Signatures for cross-chain deployment
+- **Dual Deployment**: Deploy to EVM chains from NEAR wallet
+
 ### 🤖 AI-Powered Smart Contract Generation
 - **Intelligent Token Creation**: Generate ERC-20 tokens with AI assistance
 - **Interactive Chat Interface**: Natural language smart contract creation
@@ -81,11 +86,21 @@
    
    Configure your environment variables:
    ```env
+   # Wallet Configuration
    NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID="your_wallet_connect_project_id"
+   
+   # API Endpoints
    NEXT_PUBLIC_CHAT_URL="your_chat_api_url"
    NEXT_PUBLIC_CHAT_URL_GENERAL="your_general_chat_api_url"
    NEXT_PUBLIC_WEBSOCKET_URL="your_websocket_url"
    NEXT_PUBLIC_CONTRACT_GENERATOR_URL="your_contract_generator_url"
+   
+   # NEAR Chain Signatures Configuration
+   NEXT_PUBLIC_NEAR_NETWORK_ID="testnet"
+   NEXT_PUBLIC_CONTRACT_ID="v1.signer-prod.testnet"
+   
+   # Funding Private Key (⚠️ DEMO ONLY - Use backend in production!)
+   NEXT_PUBLIC_FUNDER_PRIVATE_KEY="your_private_key_for_funding_addresses"
    ```
 
 4. **Run the development server**
@@ -100,6 +115,27 @@
 5. **Open your browser**
    
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+### 🔗 NEAR Chain Signatures Setup
+
+For NEAR wallet users to deploy tokens to EVM chains:
+
+1. **Get a Funding Private Key**
+   - Create a new wallet with some ETH/MATIC for funding derived addresses
+   - Add the private key to `NEXT_PUBLIC_FUNDER_PRIVATE_KEY`
+   - ⚠️ **Security Warning**: In production, use a backend service for funding
+
+2. **Supported Networks**
+   - **Arbitrum Mainnet** (Chain ID: 42161)
+   - **Arbitrum Sepolia** (Chain ID: 421614) 
+   - **Aurora Testnet** (Chain ID: 1313161555)
+
+3. **How it Works**
+   - Connect with NEAR wallet
+   - Select target EVM chain
+   - System derives EVM address from NEAR account
+   - Funds the derived address automatically
+   - Deploys contract via Chain Signatures MPC
 
 ## 🏗️ Tech Stack
 

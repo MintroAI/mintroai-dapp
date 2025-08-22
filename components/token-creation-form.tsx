@@ -16,6 +16,9 @@ import { Coins, Shield, Gauge, Percent, Sparkles } from "lucide-react"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { useSession } from "@/hooks/useSession"
 import { useAccount } from 'wagmi'
+import { useNearWallet } from '@/contexts/NearWalletContext'
+import { EVM } from 'multichain-tools'
+import { MPC_CONTRACT, NEAR_NETWORK_ID, DEFAULT_DERIVATION_PATH } from '@/config/chain-signatures'
 import { TokenConfirmationDialog } from "@/components/token-confirmation-dialog"
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { TokenSuccessDialog } from "@/components/token-success-dialog"
@@ -25,6 +28,7 @@ const tokenFormSchema = z.object({
   symbol: z.string().min(1, "Token symbol is required"),
   decimals: z.number().min(0).max(18),
   initialSupply: z.string().min(1, "Initial supply is required"),
+  targetChain: z.string().optional(), // For NEAR Chain Signatures
   mintable: z.boolean(),
   burnable: z.boolean(),
   pausable: z.boolean(),
@@ -64,9 +68,17 @@ const AnimatedFormCheckbox = React.forwardRef<
 ))
 AnimatedFormCheckbox.displayName = 'AnimatedFormCheckbox'
 
+// Target chains for NEAR Chain Signatures
+const TARGET_CHAINS = [
+  { id: '42161', name: 'Arbitrum Mainnet' },
+  { id: '421614', name: 'Arbitrum Sepolia' },
+  { id: '1313161555', name: 'Aurora Testnet' },
+];
+
 export function TokenCreationForm() {
   const { sessionId, isInitialized } = useSession()
   const { address } = useAccount()
+  const { accountId, selector } = useNearWallet()
   const form = useForm<TokenFormValues>({
     resolver: zodResolver(tokenFormSchema),
     defaultValues: {
@@ -74,6 +86,7 @@ export function TokenCreationForm() {
       symbol: "",
       decimals: 18,
       initialSupply: "",
+      targetChain: TARGET_CHAINS[0].id, // Default to first chain
       mintable: false,
       burnable: false,
       pausable: false,
@@ -205,8 +218,38 @@ export function TokenCreationForm() {
   
   const handleConfirm = async () => {
     try {
-      // Contract Creation
       setDeploymentStatus('creating')
+      
+      // Determine owner address based on connected wallet
+      let ownerAddress = address; // EVM wallet address
+      
+      // If NEAR wallet is connected, derive the Chain Signatures address
+      if (accountId && selector) {
+        const targetChain = TARGET_CHAINS.find(chain => chain.id === form.getValues().targetChain);
+        if (!targetChain) {
+          throw new Error('Invalid target chain selected');
+        }
+
+        // Initialize Chain Signatures to get derived address
+        const evm = new EVM({
+          providerUrl: targetChain.id === '42161' ? 'https://arb1.arbitrum.io/rpc' :
+                      targetChain.id === '421614' ? 'https://sepolia-rollup.arbitrum.io/rpc' :
+                      'https://testnet.aurora.dev',
+          contract: MPC_CONTRACT,
+          nearNetworkId: NEAR_NETWORK_ID as 'testnet' | 'mainnet',
+        });
+
+        // Derive the Chain Signatures address to use as owner
+        const { address: derivedAddress } = await evm.deriveAddressAndPublicKey(
+          accountId,
+          DEFAULT_DERIVATION_PATH
+        );
+
+        const { ethers } = await import('ethers');
+        ownerAddress = ethers.getAddress(derivedAddress);
+        console.log(`Using derived address as owner: ${ownerAddress}`);
+      }
+
       const contractData = {
         contractType: 'token' as const,
         chatId: sessionId,
@@ -215,7 +258,7 @@ export function TokenCreationForm() {
         tokenSymbol: form.getValues().symbol,
         decimals: form.getValues().decimals,
         initialSupply: form.getValues().initialSupply,
-        ownerAddress: address,
+        ownerAddress: ownerAddress,
         mintable: form.getValues().mintable,
         burnable: form.getValues().burnable,
         pausable: form.getValues().pausable,
@@ -261,9 +304,26 @@ export function TokenCreationForm() {
       console.log('Contract compiled:', compileData);
 
       // 3. Deploy contract
-      const deployResponse = await deploy(compileData.bytecode);
-      console.log('Contract deployed:', deployResponse);
-      // Not: deploy işlemi başarılı/başarısız durumu useEffect içinde takip ediliyor
+      setDeploymentStatus('deploying')
+      
+      if (accountId) {
+        // NEAR Chain Signatures deployment
+        const targetChain = TARGET_CHAINS.find(chain => chain.id === form.getValues().targetChain);
+        await deploy(compileData.bytecode, {
+          name: form.getValues().name,
+          symbol: form.getValues().symbol,
+          decimals: form.getValues().decimals,
+          initialSupply: form.getValues().initialSupply,
+          targetChain: form.getValues().targetChain,
+          targetChainName: targetChain?.name,
+          ownerAddress: ownerAddress,
+        });
+      } else {
+        // EVM deployment
+        await deploy(compileData.bytecode);
+      }
+      
+      console.log('Contract deployment initiated');
 
     } catch (error) {
       console.error('Error:', error);
@@ -329,6 +389,35 @@ export function TokenCreationForm() {
                   </FormItem>
                 )}
               />
+              
+              {/* Target Chain Selector - Only show for NEAR wallet */}
+              {accountId && (
+                <FormField
+                  control={form.control}
+                  name="targetChain"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white">Target Chain</FormLabel>
+                      <FormControl>
+                        <select
+                          {...field}
+                          className="bg-white/5 border-white/10 text-white placeholder:text-white/30
+                            focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300
+                            w-full px-3 py-2 rounded-md border"
+                        >
+                          {TARGET_CHAINS.map((chain) => (
+                            <option key={chain.id} value={chain.id} className="bg-gray-900 text-white">
+                              {chain.name}
+                            </option>
+                          ))}
+                        </select>
+                      </FormControl>
+                      <FormMessage className="text-red-400" />
+                    </FormItem>
+                  )}
+                />
+              )}
+              
               <div className="grid grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
