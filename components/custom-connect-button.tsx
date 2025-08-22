@@ -1,11 +1,60 @@
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { Button } from '@/components/ui/button'
-import { Wallet, ChevronDown } from 'lucide-react'
+import { Wallet, ChevronDown, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import Image from 'next/image'
+import { useNearWallet } from '@/contexts/NearWalletContext'
 
 export function CustomConnectButton() {
   const [showWalletMenu, setShowWalletMenu] = useState(false)
+  const { signIn, accountId, isConnected: nearConnected, signOut } = useNearWallet()
+  const [balance, setBalance] = useState<string | null>(null)
+  const [isDisconnecting, setIsDisconnecting] = useState(false)
+
+  // Fetching balance when account is connected
+  useEffect(() => {
+    const fetchBalance = async () => {
+      if (accountId) {
+        try {
+          const network = process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet'
+          const rpcUrl = network === 'mainnet' 
+            ? 'https://rpc.mainnet.near.org' 
+            : 'https://rpc.testnet.near.org'
+          
+          const response = await fetch(rpcUrl, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              jsonrpc: '2.0',
+              id: 'dontcare',
+              method: 'query',
+              params: {
+                request_type: 'view_account',
+                finality: 'final',
+                account_id: accountId,
+              },
+            }),
+          })
+
+          const data = await response.json()
+          if (data.result && data.result.amount) {
+            // Converting yoctoNEAR to NEAR
+            const nearBalance = (parseFloat(data.result.amount) / Math.pow(10, 24)).toFixed(2)
+            setBalance(nearBalance)
+          }
+        } catch (error) {
+          console.log('Could not fetch balance:', error)
+          setBalance(null)
+        }
+      } else {
+        setBalance(null)
+      }
+    }
+
+    fetchBalance()
+  }, [accountId])
 
   useEffect(() => {
     const handleClickOutside = () => {
@@ -19,6 +68,23 @@ export function CustomConnectButton() {
       return () => document.removeEventListener('click', handleClickOutside)
     }
   }, [showWalletMenu])
+
+  const handleDisconnect = async () => {
+    try {
+      setIsDisconnecting(true)
+      await signOut()
+      // Small delay then refresh 
+      setTimeout(() => {
+        window.location.reload()
+      }, 1000)
+    } catch (error) {
+      console.error('Disconnect error:', error)
+      // Force refresh if disconnect fails
+      window.location.reload()
+    } finally {
+      setIsDisconnecting(false)
+    }
+  }
 
   return (
     <ConnectButton.Custom>
@@ -38,6 +104,42 @@ export function CustomConnectButton() {
         return (
           <div className="flex items-center gap-2">
             {(() => {
+              // If NEAR wallet is connected, show NEAR account info
+              if (nearConnected && accountId) {
+                return (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-primary/50 hover:bg-primary/10 hover:border-primary transition-all duration-300"
+                    >
+                      <Wallet className="w-4 h-4" />
+                      <div className="flex flex-col items-start">
+                        <span className="text-xs">
+                          {accountId ? `${accountId.slice(0, 8)}...${accountId.slice(-6)}` : 'Connected'}
+                        </span>
+                        {balance && (
+                          <span className="text-xs text-primary">
+                            {balance} NEAR
+                          </span>
+                        )}
+                      </div>
+                    </Button>
+                    
+                    <Button
+                      onClick={handleDisconnect}
+                      disabled={isDisconnecting}
+                      variant="outline"
+                      size="sm"
+                      className="gap-2 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300 disabled:opacity-50"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+                    </Button>
+                  </div>
+                )
+              }
+
               if (!mounted || !account || !chain) {
                 return (
                   <div className="relative">
@@ -76,10 +178,10 @@ export function CustomConnectButton() {
                           <Button
                             onClick={() => {
                               setShowWalletMenu(false)
-                              console.log('NEAR wallet - coming soon')
+                              signIn()
                             }}
                             variant="ghost"
-                            className="w-full justify-start gap-3 h-10 hover:bg-gray-800/60 px-3 py-2 text-white opacity-50 rounded-lg transition-all duration-200"
+                            className="w-full justify-start gap-3 h-10 hover:bg-gray-800/60 px-3 py-2 text-white rounded-lg transition-all duration-200"
                           >
                             <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg border border-green-500/30">
                               <Image 

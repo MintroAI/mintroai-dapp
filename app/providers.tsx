@@ -10,6 +10,7 @@ import { WagmiProvider } from 'wagmi'
 import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet } from 'viem/chains'
 import { hyperEVM } from '@/config/customChains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+import { NearWalletProvider } from '@/contexts/NearWalletContext'
 
 if (!process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID) {
   throw new Error('You need to provide NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID env variable')
@@ -33,7 +34,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={darkTheme()} modalSize="compact">
-          {mounted && children}
+          <NearWalletProvider>
+            {mounted && children}
+          </NearWalletProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
     </WagmiProvider>
