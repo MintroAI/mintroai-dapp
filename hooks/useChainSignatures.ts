@@ -65,7 +65,7 @@ export function useChainSignatures() {
 
         const fundTx = await funderWallet.sendTransaction({
           to: senderAddress,
-          value: fundAmount,
+          value: fundAmount?.toString() || '0',
         });
 
         await fundTx.wait(1);
