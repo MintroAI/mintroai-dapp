@@ -237,7 +237,7 @@ export function TokenCreationForm() {
         );
 
         const { ethers } = await import('ethers');
-        ownerAddress = ethers.getAddress(derivedAddress);
+        ownerAddress = ethers.getAddress(derivedAddress) as `0x${string}`;
 
       }
 
@@ -274,7 +274,7 @@ export function TokenCreationForm() {
         throw new Error('Failed to create contract');
       }
 
-      const createData = await createResponse.json();
+      await createResponse.json();
 
 
       // 2. Contract Compilation
@@ -573,7 +573,7 @@ export function TokenCreationForm() {
                         <FormControl>
                           <AnimatedFormInput
                             type="number"
-                            value={value.toString()}
+                            value={value?.toString() || ''}
                             onChange={(e) => onChange(Number(e.target.value))}
                             className="bg-white/5 border-white/10 text-white placeholder:text-white/30
                               focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300"

@@ -44,7 +44,7 @@ export function CustomConnectButton() {
             const nearBalance = (parseFloat(data.result.amount) / Math.pow(10, 24)).toFixed(2)
             setBalance(nearBalance)
           }
-        } catch (error) {
+        } catch {
           setBalance(null)
         }
       } else {

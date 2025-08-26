@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNearWallet } from '@/contexts/NearWalletContext';
 import { EVM, ChainSignaturesContract } from 'multichain-tools';
 import { KeyPair, connect, keyStores } from 'near-api-js';
-import BN from 'bn.js';
+
 import { SUPPORTED_NETWORKS } from '@/config/networks';
 import { FACTORY_ABI } from '@/config/factory-abi';
 import { 
@@ -170,7 +170,7 @@ export function useChainSignatures() {
       }
 
       // Parse signature from transaction outcome
-      const successValue = signResult.status?.SuccessValue;
+      const successValue = (signResult.status as any)?.SuccessValue;
       if (!successValue) {
         throw new Error('No signature returned from MPC contract');
       }

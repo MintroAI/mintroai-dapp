@@ -48,7 +48,7 @@ export function NearWalletProvider({ children }: NearWalletProviderProps) {
         
         // Setup wallet selector
         const walletSelector = await setupWalletSelector({
-          network: NETWORK_ID,
+          network: NETWORK_ID as 'testnet' | 'mainnet',
           modules: [
             setupMeteorWallet(),
             setupMyNearWallet(),
