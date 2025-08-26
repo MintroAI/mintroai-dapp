@@ -57,8 +57,10 @@ export function useChainSignatures() {
       const providerFunding = new ethersLib.JsonRpcProvider(networkConfig.chain.rpcUrls.default.http[0]);
 
       // Determine top-up amount per chain
-      let fundAmount = '0.000015'; // default for Arbitrum 
-      if (chainId === 1313161555) {
+      let fundAmount = '0.000015'; // default
+      if (chainId === 97) {
+        fundAmount = '0.001'; // BSC Testnet
+      } else if (chainId === 1313161555) {
         fundAmount = '0.0003'; // Aurora Testnet
       }
 

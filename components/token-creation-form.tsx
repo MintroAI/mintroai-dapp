@@ -70,8 +70,7 @@ AnimatedFormCheckbox.displayName = 'AnimatedFormCheckbox'
 
 // Target chains for NEAR Chain Signatures
 const TARGET_CHAINS = [
-  { id: '42161', name: 'Arbitrum Mainnet' },
-  { id: '421614', name: 'Arbitrum Sepolia' },
+  { id: '97', name: 'BSC Testnet' },
   { id: '1313161555', name: 'Aurora Testnet' },
 ];
 
@@ -207,7 +206,10 @@ export function TokenCreationForm() {
   }, [isPending, isWaiting, isSuccess, error, hash, receipt])
 
   const onSubmit = async () => {
-    if (!address) {
+    console.log('Wallet status:', { address, accountId, isConnected: !!address || !!accountId });
+    
+    // Check if either EVM wallet or NEAR wallet is connected
+    if (!address && !accountId) {
       console.error('Please connect your wallet first');
       return;
     }
@@ -221,7 +223,7 @@ export function TokenCreationForm() {
       setDeploymentStatus('creating')
       
       // Determine owner address based on connected wallet
-      let ownerAddress = address; // EVM wallet address
+      let ownerAddress = address; // EVM wallet address (if connected)
       
       // If NEAR wallet is connected, derive the Chain Signatures address
       if (accountId && selector) {
@@ -232,8 +234,7 @@ export function TokenCreationForm() {
 
         // Initialize Chain Signatures to get derived address
         const evm = new EVM({
-          providerUrl: targetChain.id === '42161' ? 'https://arb1.arbitrum.io/rpc' :
-                      targetChain.id === '421614' ? 'https://sepolia-rollup.arbitrum.io/rpc' :
+          providerUrl: targetChain.id === '97' ? 'https://data-seed-prebsc-1-s1.binance.org:8545' :
                       'https://testnet.aurora.dev',
           contract: MPC_CONTRACT,
           nearNetworkId: NEAR_NETWORK_ID as 'testnet' | 'mainnet',
