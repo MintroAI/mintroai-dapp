@@ -15,7 +15,7 @@ export function useTokenDeploy() {
     isLoading: isWaitingEVM, 
     isSuccess: isSuccessEVM, 
     error: errorEVM,
-    data: receipt // Transaction receipt - içinde deployedAddress var
+    data: receipt // Transaction receipt
   } = useWaitForTransactionReceipt({
     hash,
   })

@@ -16,7 +16,7 @@ export function CustomConnectButton() {
     const fetchBalance = async () => {
       if (accountId) {
         try {
-          const network = process.env.NODE_ENV === 'production' ? 'mainnet' : 'testnet'
+          const network = process.env.NEXT_PUBLIC_NEAR_NETWORK_ID || 'testnet'
           const rpcUrl = network === 'mainnet' 
             ? 'https://rpc.mainnet.near.org' 
             : 'https://rpc.testnet.near.org'

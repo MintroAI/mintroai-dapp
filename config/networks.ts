@@ -1,10 +1,13 @@
 import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, auroraTestnet } from 'viem/chains'
 import { type Chain } from 'viem'
 import { hyperEVM } from './customChains'
-
+import { parseUnits } from 'ethers'
 export interface NetworkConfig {
   chain: Chain
   factoryAddress: `0x${string}`
+  chainSignaturesGasPrice?: bigint
+  chainSignaturesGasLimit?: number
+  chainSignaturesFundingAmount?: bigint
 }
 
 export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
@@ -42,6 +45,9 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
   [bscTestnet.id]: {
     chain: bscTestnet,
     factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // BSC Testnet factory address
+    chainSignaturesGasPrice: parseUnits('1', 'gwei'),
+    chainSignaturesGasLimit: 2000000, // 2M Gas
+    chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
   },
   // Auro Testnet
   [auroraTestnet.id]: {
@@ -56,6 +62,9 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
       },
     } as Chain,
     factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // Aurora Testnet factory address
+    chainSignaturesGasPrice: parseUnits('0.07', 'gwei'),
+    chainSignaturesGasLimit: 2000000, // 2M Gas
+    chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
   },
   // HyperEVM
   [hyperEVM.id]: {
