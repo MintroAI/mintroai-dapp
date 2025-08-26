@@ -121,8 +121,6 @@ export function TokenCreationForm() {
   }
 
   useWebSocket(sessionId, isInitialized, (config) => {
-    console.log('Form received config update:', config)
-    console.log('Current form values:', form.getValues())
     
     const newUpdatedFields = new Set<string>()
     const newUpdatedSections = new Set<string>()
@@ -147,7 +145,6 @@ export function TokenCreationForm() {
         // Yeni değeri mevcut değerle karşılaştır
         const hasChanged = JSON.stringify(currentValue) !== JSON.stringify(value);
         if (hasChanged) {
-          console.log(`Updating form field: ${key} with value:`, value);
           form.setValue(key as keyof TokenFormValues, value, {
             shouldValidate: true,
             shouldDirty: true,
@@ -160,11 +157,7 @@ export function TokenCreationForm() {
           if (fieldToSection[key]) {
             newUpdatedSections.add(fieldToSection[key])
           }
-        } else {
-          console.log(`Field ${key} unchanged, no update needed.`);
         }
-      } else {
-        console.log(`Field ${key} not found in form`);
       }
     })
     
@@ -179,8 +172,7 @@ export function TokenCreationForm() {
         setUpdatedSections(new Set())
       }, 4000)
     }
-    
-    console.log('Updated form values:', form.getValues())
+
   })
 
   // useEffect to track deployment status
@@ -191,8 +183,7 @@ export function TokenCreationForm() {
       setDeploymentStatus('success')
       const deployedAddr = receipt.logs[0].address
       setDeployedAddress(deployedAddr)
-      console.log('Transaction hash:', hash)
-      console.log('Deployed contract address:', deployedAddr)
+
       
       // Confirmation dialog'u kapat ve success dialog'u aç
       setTimeout(() => {
@@ -206,7 +197,6 @@ export function TokenCreationForm() {
   }, [isPending, isWaiting, isSuccess, error, hash, receipt])
 
   const onSubmit = async () => {
-    console.log('Wallet status:', { address, accountId, isConnected: !!address || !!accountId });
     
     // Check if either EVM wallet or NEAR wallet is connected
     if (!address && !accountId) {
@@ -248,7 +238,7 @@ export function TokenCreationForm() {
 
         const { ethers } = await import('ethers');
         ownerAddress = ethers.getAddress(derivedAddress);
-        console.log(`Using derived address as owner: ${ownerAddress}`);
+
       }
 
       const contractData = {
@@ -285,7 +275,7 @@ export function TokenCreationForm() {
       }
 
       const createData = await createResponse.json();
-      console.log('Contract created:', createData);
+
 
       // 2. Contract Compilation
       setDeploymentStatus('compiling')
@@ -302,7 +292,7 @@ export function TokenCreationForm() {
       }
 
       const compileData = await compileResponse.json();
-      console.log('Contract compiled:', compileData);
+
 
       // 3. Deploy contract
       setDeploymentStatus('deploying')
@@ -324,7 +314,7 @@ export function TokenCreationForm() {
         await deploy(compileData.bytecode);
       }
       
-      console.log('Contract deployment initiated');
+
 
     } catch (error) {
       console.error('Error:', error);

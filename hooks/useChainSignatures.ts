@@ -32,10 +32,6 @@ export function useChainSignatures() {
         throw new Error(`Unsupported chain ID: ${chainId}`);
       }
 
-      console.log(`Deploying token to ${payload.tokenConfig.target_chain_name} (Chain ID: ${chainId})`);
-      console.log(`Using NEAR Network: ${NEAR_NETWORK_ID}`);
-
-
       const evm = new EVM({
         providerUrl: networkConfig.chain.rpcUrls.default.http[0],
         contract: MPC_CONTRACT,
@@ -48,11 +44,6 @@ export function useChainSignatures() {
         derivationPath
       );
 
-      console.log(`Derived Chain Signatures Address: ${senderAddress}`);
-      console.log(`Derivation Path: ${derivationPath}`);
-      console.log(`Factory Contract: ${networkConfig.factoryAddress}`);
-
-     
       const { ethers: ethersLib } = await import('ethers');
       const providerFunding = new ethersLib.JsonRpcProvider(networkConfig.chain.rpcUrls.default.http[0]);
 
@@ -75,22 +66,18 @@ export function useChainSignatures() {
          and never exposed to the client side. */
       const funderKey = process.env.NEXT_PUBLIC_FUNDER_PRIVATE_KEY || process.env.FUNDER_PRIVATE_KEY;
       if (!funderKey) {
-        // Mock test mode - log instead of throwing error
-        console.log('🧪 TEST MODE: Funding private key not set - would fund address:', senderAddress);
-        console.log('🧪 TEST MODE: Would send', fundAmount, 'ETH to derived address');
+        // Mock test mode - skip funding
         // Skip funding in test mode
       } else {
         const funderWallet = new ethersLib.Wallet(funderKey, providerFunding);
-        console.log(`Sending ${fundAmount} ETH to derived address from ${funderWallet.address}`);
+
 
         const fundTx = await funderWallet.sendTransaction({
           to: senderAddress,
           value: fundValueWei,
         });
 
-        console.log(`⏳ Funding tx sent: ${fundTx.hash}. Waiting confirmation...`);
         await fundTx.wait(1);
-        console.log('Funding transaction confirmed');
       }
 
       let formattedBytecode = payload.bytecode;
@@ -107,7 +94,7 @@ export function useChainSignatures() {
       const { ethers } = await import('ethers');
       const contractInterface = new ethers.Interface(FACTORY_ABI);
       const data = contractInterface.encodeFunctionData("deployBytecode", [formattedBytecode]);
-      console.log(`📦 Encoded deployment data: ${data.slice(0, 50)}...`);
+
 
       // Prepare transaction request
       const transactionRequest: any = {
@@ -128,7 +115,7 @@ export function useChainSignatures() {
         // ensure legacy gasPrice/type removed
         delete transactionRequest.gasPrice;
         delete transactionRequest.type;
-        console.log(`🔧 Aurora override: maxFeePerGas & maxPriorityFeePerGas set to 0.07 Gwei`);
+
       }
 
       // Get the MPC payload and transaction
@@ -142,11 +129,10 @@ export function useChainSignatures() {
         transaction.maxPriorityFeePerGas = auroraGasPrice;
         delete transaction.gasPrice;
         delete transaction.type;
-        console.log(`Final Aurora tx override: maxFeePerGas & maxPriorityFeePerGas 0.07 Gwei`);
+
       }
 
-      console.log(`Transaction prepared for signing. Payload ready.`);
-      console.log(`Requesting signature from Chain Signatures MPC...`);
+
 
       // Get the wallet for signing
       const wallet = await selector.wallet();
@@ -160,7 +146,7 @@ export function useChainSignatures() {
         },
       };
 
-      console.log('Calling MPC contract directly with wallet selector...');
+
 
       const signResult = await wallet.signAndSendTransaction({
         receiverId: MPC_CONTRACT,
@@ -177,7 +163,7 @@ export function useChainSignatures() {
         ],
       });
 
-      console.log('MPC signing transaction result:', signResult);
+
 
       if (!signResult || !signResult.transaction_outcome) {
         throw new Error('Failed to get signature from MPC contract');
@@ -190,7 +176,7 @@ export function useChainSignatures() {
       }
 
       const signatureResult = JSON.parse(atob(successValue));
-      console.log('Parsed MPC signature result:', signatureResult);
+
 
       const mpcSignature = {
         big_r: { affine_point: signatureResult.big_r.affine_point },
@@ -198,20 +184,19 @@ export function useChainSignatures() {
         recovery_id: signatureResult.recovery_id,
       };
 
-      console.log('Extracted MPC signature:', mpcSignature);
-      console.log('Broadcasting transaction...');
+
 
       const broadcastResult = await evm.addSignatureAndBroadcast({
         transaction,
         mpcSignatures: [mpcSignature],
       });
 
-      console.log(`Transaction broadcasted! Hash: ${broadcastResult}`);
+
 
       // Wait for receipt
       const provider = new ethers.JsonRpcProvider(networkConfig.chain.rpcUrls.default.http[0]);
       const receipt = await provider.waitForTransaction(broadcastResult);
-      console.log('Transaction receipt:', receipt);
+
 
       let deployedAddress: string | null = null;
       if (receipt?.contractAddress) {

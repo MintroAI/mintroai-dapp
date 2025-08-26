@@ -13,7 +13,7 @@ export function useSession() {
     // Component ilk mount edildiğinde çalışır
     if (!globalSessionId) {
       globalSessionId = generateId()
-      console.log('New global session created:', globalSessionId)
+
     }
     return globalSessionId
   })

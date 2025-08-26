@@ -42,23 +42,14 @@ export function useWebSocket(
     globalWs = ws
 
     ws.onopen = () => {
-      console.log('WebSocket connected for session:', sessionId)
+
     }
 
     ws.onmessage = (event) => {
-      console.log('Raw WebSocket message received:', event.data)
       try {
         const data = JSON.parse(event.data)
-        console.log('Parsed WebSocket data:', data)
         if (data.type === 'configUpdated' && data.chatId === sessionId) {
-          console.log('Config update for current session:', data.config)
           onConfigUpdateRef.current(data.config)
-        } else {
-          console.log('Message ignored - type or sessionId mismatch:', {
-            type: data.type,
-            messageChatId: data.chatId,
-            currentSessionId: sessionId
-          })
         }
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error)
@@ -74,7 +65,7 @@ export function useWebSocket(
     }
 
     ws.onclose = () => {
-      console.log('WebSocket disconnected for session:', sessionId)
+
       if (globalSessionId === sessionId) {
         globalWs = null
         globalSessionId = null

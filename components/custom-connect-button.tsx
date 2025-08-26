@@ -45,7 +45,6 @@ export function CustomConnectButton() {
             setBalance(nearBalance)
           }
         } catch (error) {
-          console.log('Could not fetch balance:', error)
           setBalance(null)
         }
       } else {

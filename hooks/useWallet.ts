@@ -10,19 +10,13 @@ export function useWallet() {
 
   useEffect(() => {
     // Account change handler
-    if (account.status === 'connected') {
-      console.log('Wallet connected:', account.address)
-    } else if (account.status === 'disconnected') {
-      console.log('Wallet disconnected')
-    }
+    // Wallet connection status changed
   }, [account.status, account.address])
 
   useEffect(() => {
     // Network change handler
     const chain = config.chains.find(c => c.id === config.state.chainId)
-    if (chain) {
-      console.log('Network changed:', chain.name)
-    }
+    // Network changed
   }, [config.state.chainId, config.chains])
 
   return {

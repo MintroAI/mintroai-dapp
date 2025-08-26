@@ -49,7 +49,6 @@ export async function POST(request: NextRequest) {
     
     if (!contractGeneratorUrl) {
       // Return mock response for development/testing
-      console.log('No CONTRACT_GENERATOR_URL configured, returning mock response');
       return NextResponse.json({
         success: true,
         contractCode: `// Mock ERC20 Token Contract for ${contractData.contractType === 'token' ? contractData.tokenName : 'Contract'}
