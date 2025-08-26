@@ -1,4 +1,4 @@
-import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet } from 'viem/chains'
+import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, auroraTestnet } from 'viem/chains'
 import { type Chain } from 'viem'
 import { hyperEVM } from './customChains'
 
@@ -42,6 +42,20 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
   [bscTestnet.id]: {
     chain: bscTestnet,
     factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // BSC Testnet factory address
+  },
+  // Auro Testnet
+  [auroraTestnet.id]: {
+    // Override explorer URL to explorer.testnet.aurora.dev
+    chain: {
+      ...auroraTestnet,
+      blockExplorers: {
+        default: {
+          name: 'Aurora Testnet Explorer',
+          url: 'https://explorer.testnet.aurora.dev'
+        },
+      },
+    } as Chain,
+    factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // Aurora Testnet factory address
   },
   // HyperEVM
   [hyperEVM.id]: {

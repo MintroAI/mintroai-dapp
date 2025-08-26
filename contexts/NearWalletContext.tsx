@@ -25,8 +25,8 @@ interface NearWalletContextType {
 const NearWalletContext = createContext<NearWalletContextType | null>(null)
 
 // NEAR Configuration
-const MPC_CONTRACT = 'v1.signer-prod.testnet'
-const NETWORK_ID = 'testnet'
+const MPC_CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ID || 'v1.signer-prod.testnet'
+const NETWORK_ID = process.env.NEXT_PUBLIC_NEAR_NETWORK_ID || 'testnet'
 
 interface NearWalletProviderProps {
   children: ReactNode
@@ -48,7 +48,7 @@ export function NearWalletProvider({ children }: NearWalletProviderProps) {
         
         // Setup wallet selector
         const walletSelector = await setupWalletSelector({
-          network: NETWORK_ID,
+          network: NETWORK_ID as 'testnet' | 'mainnet',
           modules: [
             setupMeteorWallet(),
             setupMyNearWallet(),
