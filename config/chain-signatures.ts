@@ -1,6 +1,6 @@
 // Chain Signatures Configuration for multichain-tools
-export const NEAR_NETWORK_ID = 'testnet';
-export const MPC_CONTRACT = 'v1.signer-prod.testnet';
+export const NEAR_NETWORK_ID = process.env.NEXT_PUBLIC_NEAR_NETWORK_ID || 'testnet';
+export const MPC_CONTRACT = process.env.NEXT_PUBLIC_CONTRACT_ID || 'v1.signer-prod.testnet';
 export const DEFAULT_DERIVATION_PATH = 'ethereum-1';
 
 // Token deployment payload type

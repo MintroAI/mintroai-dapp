@@ -48,17 +48,8 @@ export function useChainSignatures() {
       const providerFunding = new ethersLib.JsonRpcProvider(networkConfig.chain.rpcUrls.default.http[0]);
 
       // Determine top-up amount per chain
-      let fundAmount = '0.000015'; // default
-      if (chainId === 97) {
-        fundAmount = '0.001'; // BSC Testnet
-      } else if (chainId === 1313161555) {
-        fundAmount = '0.0003'; // Aurora Testnet
-      }
+      let fundAmount = networkConfig.chainSignaturesFundingAmount;
 
-      // X.near -> evm wallet
-      // MPC request -> signature -> payment manuel if succeseed -> rpc
-
-      const fundValueWei = ethersLib.parseUnits(fundAmount, 'ether');
 
       /* WARNING: Using private keys in NEXT_PUBLIC environment variables is NOT secure
          and should never be done in production. This is only for demo purposes.
@@ -74,7 +65,7 @@ export function useChainSignatures() {
 
         const fundTx = await funderWallet.sendTransaction({
           to: senderAddress,
-          value: fundValueWei,
+          value: fundAmount,
         });
 
         await fundTx.wait(1);
@@ -103,35 +94,24 @@ export function useChainSignatures() {
         from: senderAddress,
       };
 
-      // Aurora Testnet specific gas settings (constant 0.07 Gwei)
-      if (chainId === 1313161555) {
-        const { ethers: ethersLib } = await import('ethers');
-        const auroraGasPrice = ethersLib.parseUnits('0.07', 'gwei');
-        Object.assign(transactionRequest, {
-          maxFeePerGas: auroraGasPrice,
-          maxPriorityFeePerGas: auroraGasPrice,
-          gasLimit: 1_000_000,
-        });
-        // ensure legacy gasPrice/type removed
-        delete transactionRequest.gasPrice;
-        delete transactionRequest.type;
+      Object.assign(transactionRequest, {
+        maxFeePerGas: networkConfig.chainSignaturesGasPrice,
+        maxPriorityFeePerGas: networkConfig.chainSignaturesGasPrice,
+        gasLimit: networkConfig.chainSignaturesGasLimit,
+      });
+      // ensure legacy gasPrice/type removed
+      delete transactionRequest.gasPrice;
+      delete transactionRequest.type;
 
-      }
 
       // Get the MPC payload and transaction
       const { transaction, mpcPayloads } = await evm.getMPCPayloadAndTransaction(transactionRequest);
       
-      // Ensure Aurora transaction keeps correct fees
-      if (chainId === 1313161555) {
-        const { ethers: ethersLib } = await import('ethers');
-        const auroraGasPrice = ethersLib.parseUnits('0.07', 'gwei');
-        transaction.maxFeePerGas = auroraGasPrice;
-        transaction.maxPriorityFeePerGas = auroraGasPrice;
-        delete transaction.gasPrice;
-        delete transaction.type;
-
-      }
-
+      transaction.maxFeePerGas = networkConfig.chainSignaturesGasPrice;
+      transaction.maxPriorityFeePerGas = networkConfig.chainSignaturesGasPrice;
+      transaction.gasLimit = networkConfig.chainSignaturesGasLimit;
+      delete transaction.gasPrice;
+      delete transaction.type;
 
 
       // Get the wallet for signing

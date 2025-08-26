@@ -238,6 +238,7 @@ export function TokenCreationForm() {
 
         const { ethers } = await import('ethers');
         ownerAddress = ethers.getAddress(derivedAddress) as `0x${string}`;
+        console.log('User derived address:', derivedAddress)
 
       }
 
