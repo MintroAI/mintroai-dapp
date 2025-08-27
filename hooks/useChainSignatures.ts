@@ -56,9 +56,10 @@ export function useChainSignatures() {
          In a real application, private keys should be stored securely on the backend
          and never exposed to the client side. */
       const funderKey = process.env.NEXT_PUBLIC_FUNDER_PRIVATE_KEY || process.env.FUNDER_PRIVATE_KEY;
+      
       if (!funderKey) {
         // Mock test mode - skip funding
-        // Skip funding in test mode
+        console.log('⚠️ No funder key - skipping funding');
       } else {
         const funderWallet = new ethersLib.Wallet(funderKey, providerFunding);
 

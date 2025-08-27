@@ -64,7 +64,7 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
     factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // Aurora Testnet factory address
     chainSignaturesGasPrice: parseUnits('0.07', 'gwei'),
     chainSignaturesGasLimit: 2000000, // 2M Gas
-    chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
+    chainSignaturesFundingAmount: parseUnits('0.00025', 'ether')
   },
   // HyperEVM
   [hyperEVM.id]: {
