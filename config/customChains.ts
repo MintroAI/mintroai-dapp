@@ -1,7 +1,7 @@
 import { type Chain } from 'viem'
 
 // Custom HyperEVM chain definition
-export const hyperEVM: Chain = {
+export const hyperEVM = {
   id: 999,
   name: 'HyperEVM',
   nativeCurrency: {
@@ -20,8 +20,6 @@ export const hyperEVM: Chain = {
       url: 'https://hyperevmscan.io',
     },
   },
+  iconUrl: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRhg-_jsAmk1K0-kX3RU8hBYqCqnofCqB5fnFptxjEA_dryJdo_zrG_Y27XRPa6flPs93M&usqp=CAU',
   testnet: false,
-}
-
-// Future custom chains can be added here
-// export const customChain2: Chain = { ... } 
+} as const satisfies Chain & { iconUrl: string }
