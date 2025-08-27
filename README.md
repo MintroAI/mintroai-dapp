@@ -58,16 +58,49 @@
 
 ### Prerequisites
 
-- **Node.js** 18.0 or higher
-- **npm**, **yarn**, **pnpm**, or **bun**
+- **Docker** (for containerized deployment)
+- **Node.js** 18.0 or higher (for local development)
+- **npm**, **yarn**, **pnpm**, or **bun** (for local development)
 - **MetaMask** or compatible Web3 wallet
 
-### Installation
+### 🐳 Docker Deployment (Recommended)
+
+The easiest way to run the application:
 
 1. **Clone the repository**
    ```bash
    git clone https://github.com/truthdeal/mintroai-dapp
-   cd saas-dapp
+   cd mintroai-dapp
+   ```
+
+2. **Set up environment variables**
+   ```bash
+   cp env.example .env.local
+   ```
+   
+   Edit `.env.local` with your configuration (see environment variables section below).
+
+3. **Build and run with Docker**
+   ```bash
+   # Build the Docker image
+   docker build -t mintroai-dapp .
+   
+   # Run the container
+   docker run -p 3000:3000 --env-file .env.local mintroai-dapp
+   ```
+
+4. **Open your browser**
+   
+   Navigate to [http://localhost:3000](http://localhost:3000)
+
+### 📦 Local Development
+
+For development with hot reload:
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/truthdeal/mintroai-dapp
+   cd mintroai-dapp
    ```
 
 2. **Install dependencies**
@@ -115,6 +148,31 @@
 5. **Open your browser**
    
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+### 🐳 Docker Commands
+
+```bash
+# Build the image
+docker build -t mintroai-dapp .
+
+# Run the container
+docker run -p 3000:3000 --env-file .env mintroai-dapp
+
+# Run in background (detached mode)
+docker run -d -p 3000:3000 --env-file .env --name mintroai-app mintroai-dapp
+
+# View logs
+docker logs mintroai-app
+
+# Stop the container
+docker stop mintroai-app
+
+# Remove the container
+docker rm mintroai-app
+
+# Remove the image
+docker rmi mintroai-dapp
+```
 
 ### 🔗 NEAR Chain Signatures Setup
 
