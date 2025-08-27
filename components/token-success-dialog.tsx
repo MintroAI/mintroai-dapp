@@ -9,6 +9,7 @@ import { type Chain, /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, 
 import { hyperEVM } from '@/config/customChains'
 import { ExternalLink } from 'lucide-react'
 import { useNearWallet } from '@/contexts/NearWalletContext'
+import { SUPPORTED_NETWORKS } from "@/config/networks"
 
 interface TokenSuccessDialogProps {
   isOpen: boolean
@@ -16,6 +17,7 @@ interface TokenSuccessDialogProps {
   tokenAddress: string
   tokenName: string
   tokenSymbol: string
+  targetChainId?: string // Near Chain Signatures için target chain
 }
 
 export function TokenSuccessDialog({
@@ -23,20 +25,21 @@ export function TokenSuccessDialog({
   onClose,
   tokenAddress,
   tokenName,
-  tokenSymbol
+  tokenSymbol,
+  targetChainId
 }: TokenSuccessDialogProps) {
   const chainId = useChainId()
   const { isConnected: nearConnected } = useNearWallet()
 
   // Chain'e göre block explorer URL'ini bul
   const getExplorerUrl = () => {
-    // Eğer Near cüzdanı bağlıysa Near explorer'ını kullan
-    if (nearConnected) {
-      const network = process.env.NEXT_PUBLIC_NEAR_NETWORK_ID || 'testnet'
-      const explorerUrl = network === 'mainnet' 
-        ? 'https://nearblocks.io' 
-        : 'https://testnet.nearblocks.io'
-      return `${explorerUrl}/address/${tokenAddress}`
+    // Eğer Near cüzdanı bağlıysa ve target chain belirtilmişse, target chain explorer'ını kullan
+    if (nearConnected && targetChainId) {
+      const targetChainIdNum = parseInt(targetChainId)
+      const targetNetwork = SUPPORTED_NETWORKS[targetChainIdNum]
+      if (targetNetwork?.chain?.blockExplorers?.default?.url) {
+        return `${targetNetwork.chain.blockExplorers.default.url}/address/${tokenAddress}`
+      }
     }
 
     // Diğer EVM chainleri için mevcut logic

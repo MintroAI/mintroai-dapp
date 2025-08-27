@@ -683,6 +683,7 @@ export function TokenCreationForm() {
           tokenAddress={deployedAddress}
           tokenName={form.getValues().name}
           tokenSymbol={form.getValues().symbol}
+          targetChainId={form.getValues().targetChain}
         />
       )}
     </>
