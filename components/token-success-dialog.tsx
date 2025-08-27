@@ -8,6 +8,7 @@ import { useChainId } from 'wagmi'
 import { type Chain, /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, /* bsc */ } from 'viem/chains'
 import { hyperEVM } from '@/config/customChains'
 import { ExternalLink } from 'lucide-react'
+import { useNearWallet } from '@/contexts/NearWalletContext'
 
 interface TokenSuccessDialogProps {
   isOpen: boolean
@@ -25,9 +26,20 @@ export function TokenSuccessDialog({
   tokenSymbol
 }: TokenSuccessDialogProps) {
   const chainId = useChainId()
+  const { isConnected: nearConnected } = useNearWallet()
 
   // Chain'e göre block explorer URL'ini bul
   const getExplorerUrl = () => {
+    // Eğer Near cüzdanı bağlıysa Near explorer'ını kullan
+    if (nearConnected) {
+      const network = process.env.NEXT_PUBLIC_NEAR_NETWORK_ID || 'testnet'
+      const explorerUrl = network === 'mainnet' 
+        ? 'https://nearblocks.io' 
+        : 'https://testnet.nearblocks.io'
+      return `${explorerUrl}/address/${tokenAddress}`
+    }
+
+    // Diğer EVM chainleri için mevcut logic
     const chains: Record<number, Chain> = {
       // [mainnet.id]: mainnet,
       // [polygon.id]: polygon,

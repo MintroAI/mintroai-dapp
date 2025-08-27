@@ -663,7 +663,15 @@ export function TokenCreationForm() {
       <TokenConfirmationDialog
         isOpen={showConfirmation}
         onConfirm={handleConfirm}
-        onCancel={() => deploymentStatus === 'idle' && setShowConfirmation(false)}
+        onCancel={() => {
+          if (deploymentStatus === 'idle' || deploymentStatus === 'error') {
+            setShowConfirmation(false)
+            // Error durumunda deployment status'u da sıfırla
+            if (deploymentStatus === 'error') {
+              setDeploymentStatus('idle')
+            }
+          }
+        }}
         formData={form.getValues()}
         deploymentStatus={deploymentStatus}
       />
