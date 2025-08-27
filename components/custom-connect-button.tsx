@@ -169,7 +169,7 @@ export function CustomConnectButton() {
                             <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-lg border border-orange-500/30">
                               <span className="text-lg">🦊</span>
                             </div>
-                            <div className="font-medium text-sm text-white">MetaMask</div>
+                            <div className="font-medium text-sm text-white">EVM Wallet</div>
                           </Button>
                           
                           <div className="h-px bg-gradient-to-r from-transparent via-gray-700/50 to-transparent my-1"></div>
