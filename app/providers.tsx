@@ -11,6 +11,7 @@ import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestne
 import { hyperEVM } from '@/config/customChains'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NearWalletProvider } from '@/contexts/NearWalletContext'
+import { WalletProvider } from '@/contexts/WalletContext'
 
 if (!process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID) {
   throw new Error('You need to provide NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID env variable')
@@ -35,7 +36,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <QueryClientProvider client={queryClient}>
         <RainbowKitProvider theme={darkTheme()} modalSize="compact">
           <NearWalletProvider>
-            {mounted && children}
+            <WalletProvider>
+              {mounted && children}
+            </WalletProvider>
           </NearWalletProvider>
         </RainbowKitProvider>
       </QueryClientProvider>
