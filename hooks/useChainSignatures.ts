@@ -47,29 +47,41 @@ export function useChainSignatures() {
       const { ethers: ethersLib } = await import('ethers');
       const providerFunding = new ethersLib.JsonRpcProvider(networkConfig.chain.rpcUrls.default.http[0]);
 
-      // Determine top-up amount per chain
-      let fundAmount = networkConfig.chainSignaturesFundingAmount;
-
-
-      /* WARNING: Using private keys in NEXT_PUBLIC environment variables is NOT secure
-         and should never be done in production. This is only for demo purposes.
-         In a real application, private keys should be stored securely on the backend
-         and never exposed to the client side. */
-      const funderKey = process.env.NEXT_PUBLIC_FUNDER_PRIVATE_KEY || process.env.FUNDER_PRIVATE_KEY;
+      // Request funding from backend (secure approach)
+      console.log('🔐 Requesting secure funding from backend for:', senderAddress);
       
-      if (!funderKey) {
-        // Mock test mode - skip funding
-        console.log('⚠️ No funder key - skipping funding');
-      } else {
-        const funderWallet = new ethersLib.Wallet(funderKey, providerFunding);
-
-
-        const fundTx = await funderWallet.sendTransaction({
-          to: senderAddress,
-          value: fundAmount?.toString() || '0',
+      try {
+        // Call backend funding API
+        const backendUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:3005';
+        const fundingResponse = await fetch(`${backendUrl}/api/fund-address`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            address: senderAddress,
+            chainId: chainId.toString(),
+          }),
         });
 
-        await fundTx.wait(1);
+        const fundingResult = await fundingResponse.json();
+        
+        if (!fundingResponse.ok) {
+          console.error('❌ Funding failed:', fundingResult.error);
+          // Continue anyway - user might have manual funds
+          console.log('⚠️ Continuing without funding - make sure address has funds');
+        } else {
+          console.log('✅ Funding successful:', fundingResult);
+          
+          // Wait a bit for transaction to be confirmed
+          if (fundingResult.funded) {
+            await new Promise(resolve => setTimeout(resolve, 3000));
+          }
+        }
+      } catch (fundingError) {
+        console.error('❌ Funding service error:', fundingError);
+        console.log('⚠️ Backend funding service unavailable - please fund manually');
+        // Continue anyway - user might have manual funds
       }
 
       let formattedBytecode = payload.bytecode;
