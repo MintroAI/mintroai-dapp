@@ -52,7 +52,7 @@ export function useChainSignatures() {
       
       try {
         // Call backend funding API
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:3005';
+        const backendUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:3005';
         const fundingResponse = await fetch(`${backendUrl}/api/fund-address`, {
           method: 'POST',
           headers: {
