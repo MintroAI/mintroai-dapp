@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { motion } from "framer-motion"
 import confetti from 'canvas-confetti'
 import { useChainId } from 'wagmi'
-import { type Chain, arbitrum, bscTestnet } from 'viem/chains'
+import { type Chain, arbitrum, bsc, bscTestnet, auroraTestnet } from 'viem/chains'
 import { hyperEVM } from '@/config/customChains'
 import { ExternalLink, Copy, Calendar, Users, Clock } from 'lucide-react'
 import { VestingFormValues } from "./vesting-creation-form"
@@ -35,6 +35,8 @@ export function VestingSuccessDialog({
     const chains: Record<number, Chain> = {
       [arbitrum.id]: arbitrum,
       [bscTestnet.id]: bscTestnet,
+      [bsc.id]: bsc,
+      [auroraTestnet.id]: auroraTestnet,
       [hyperEVM.id]: hyperEVM,
     }
     
