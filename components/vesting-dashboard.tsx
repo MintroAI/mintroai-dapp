@@ -8,7 +8,8 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAccount, useReadContract, useWriteContract, useWaitForTransactionReceipt, useChainId, usePublicClient } from 'wagmi'
 import { formatUnits, parseUnits, type Address, parseAbiItem, getAddress } from 'viem'
-import { type Chain, arbitrum, bscTestnet } from 'viem/chains'
+import { type Chain, arbitrum, bsc, bscTestnet, auroraTestnet } from 'viem/chains'
+import { hyperEVM } from '@/config/customChains'
 import vestingABI from '@/constants/vestingContractABI.json'
 import erc20ABI from '@/constants/erc20ABI.json'
 import { toast } from "sonner"
@@ -643,6 +644,9 @@ export function VestingDashboard({ contractAddress }: VestingDashboardProps) {
     const chains: Record<number, Chain> = {
       [arbitrum.id]: arbitrum,
       [bscTestnet.id]: bscTestnet,
+      [bsc.id]: bsc,
+      [auroraTestnet.id]: auroraTestnet,
+      [hyperEVM.id]: hyperEVM,
     }
     
     const chain = chains[chainId]

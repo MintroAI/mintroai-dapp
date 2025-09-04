@@ -1,4 +1,4 @@
-import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, auroraTestnet } from 'viem/chains'
+import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bsc, bscTestnet, auroraTestnet } from 'viem/chains'
 import { type Chain } from 'viem'
 import { hyperEVM } from './customChains'
 import { parseUnits } from 'ethers'
@@ -41,6 +41,23 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
   //   chain: zora,
   //   factoryAddress: "0x..." as `0x${string}`, // Zora factory address
   // },
+  // BSC Mainnet
+  [bsc.id]: {
+    chain: {
+      ...bsc,
+      rpcUrls: {
+        default: {
+          http: ['https://bsc-rpc.publicnode.com/'],
+        },
+      },
+    } as Chain,
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // BSC Mainnet factory address
+  },
+  // HyperEVM
+  [hyperEVM.id]: {
+    chain: hyperEVM,
+    factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // HyperEVM factory address
+  },
   // BSC Testnet
   [bscTestnet.id]: {
     chain: bscTestnet,
@@ -49,7 +66,7 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
     chainSignaturesGasLimit: 2000000, // 2M Gas
     chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
   },
-  // Auro Testnet
+  // Aurora Testnet
   [auroraTestnet.id]: {
     // Override explorer URL to explorer.testnet.aurora.dev
     chain: {
@@ -60,15 +77,11 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
           url: 'https://explorer.testnet.aurora.dev'
         },
       },
+      iconUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/14803.png',
     } as Chain,
     factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // Aurora Testnet factory address
     chainSignaturesGasPrice: parseUnits('0.07', 'gwei'),
     chainSignaturesGasLimit: 2000000, // 2M Gas
-    chainSignaturesFundingAmount: parseUnits('0.00025', 'ether')
-  },
-  // HyperEVM
-  [hyperEVM.id]: {
-    chain: hyperEVM,
-    factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // HyperEVM factory address
+    chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
   }
 } 
