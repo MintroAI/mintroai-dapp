@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
-import { CustomConnectButton } from "@/components/custom-connect-button"
+import { CustomConnectButton } from "@/components/custom-connect-button-new"
 import { GeneralPurposeExamples } from "@/components/GeneralPurposeExamples"
 
 export default function DappPage() {

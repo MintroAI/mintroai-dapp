@@ -84,20 +84,27 @@ export function WalletProvider({ children }: WalletProviderProps) {
         error: null
       }))
     } else if (evmAccount.isConnecting) {
-      setWalletState(prev => ({
-        ...prev,
-        isConnecting: true,
-        error: null
-      }))
-    } else if (evmAccount.isDisconnected && walletState.activeWallet?.type === 'evm') {
-      setWalletState(prev => ({
-        ...prev,
-        isConnected: false,
-        isConnecting: false,
-        activeWallet: null
-      }))
+      // Only set connecting state if not already connected or disconnected
+      // This prevents stuck "connecting" state from RainbowKit's auto-connect
+      if (!walletState.isConnected && !evmAccount.isDisconnected) {
+        setWalletState(prev => ({
+          ...prev,
+          isConnecting: true,
+          error: null
+        }))
+      }
+    } else if (evmAccount.isDisconnected) {
+      // Clear state when disconnected
+      if (walletState.activeWallet?.type === 'evm' || walletState.isConnecting) {
+        setWalletState(prev => ({
+          ...prev,
+          isConnected: false,
+          isConnecting: false,
+          activeWallet: null
+        }))
+      }
     }
-  }, [evmAccount, evmBalance, chainId, walletState.activeWallet?.type])
+  }, [evmAccount, evmBalance, chainId, walletState.activeWallet?.type, walletState.isConnected, walletState.isConnecting])
 
   // Update wallet state based on NEAR connection
   useEffect(() => {

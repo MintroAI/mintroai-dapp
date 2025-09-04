@@ -7,19 +7,59 @@ import { useState, useEffect } from 'react'
 import Image from 'next/image'
 import { useWallet } from '@/hooks/useWallet'
 import { WalletErrorInline } from '@/components/WalletError'
+import { useAuthentication } from '@/hooks/useAuthentication'
 
 export function CustomConnectButton() {
   const [showWalletMenu, setShowWalletMenu] = useState(false)
   const [isDisconnecting, setIsDisconnecting] = useState(false)
+  const [hasTriggeredAuth, setHasTriggeredAuth] = useState(false)
+  const [userCancelledAuth, setUserCancelledAuth] = useState(false)
   
   // Use unified wallet system
   const { 
     wallet, 
-    connectEVM, 
     connectNEAR, 
     disconnect, 
     clearError 
   } = useWallet()
+  
+  // Use authentication hook
+  const { 
+    isAuthenticated,
+    authenticate,
+    logout: authLogout,
+    reset: resetAuth
+  } = useAuthentication()
+
+  // Auto-trigger authentication when EVM wallet connects
+  useEffect(() => {
+    const triggerAuth = async () => {
+      if (wallet.isConnected && wallet.activeWallet?.type === 'evm' && !isAuthenticated && !hasTriggeredAuth && !userCancelledAuth) {
+        console.log('🔐 EVM wallet connected, starting authentication...')
+        setHasTriggeredAuth(true)
+        
+        // Directly call authenticate without showing modal
+        // MetaMask will show its own popup
+        const success = await authenticate()
+        
+        if (!success) {
+          // If authentication failed or was cancelled
+          setUserCancelledAuth(true)
+          console.log('❌ Authentication failed or cancelled')
+        }
+      }
+    }
+    
+    triggerAuth()
+  }, [wallet.isConnected, wallet.activeWallet?.type, isAuthenticated, hasTriggeredAuth, userCancelledAuth, authenticate])
+
+  // Reset auth trigger flag when wallet disconnects
+  useEffect(() => {
+    if (!wallet.isConnected) {
+      setHasTriggeredAuth(false)
+      setUserCancelledAuth(false)
+    }
+  }, [wallet.isConnected])
 
   // Handle wallet menu click outside
   useEffect(() => {
@@ -39,7 +79,12 @@ export function CustomConnectButton() {
   const handleDisconnect = async () => {
     try {
       setIsDisconnecting(true)
+      // Logout from authentication first
+      if (isAuthenticated) {
+        await authLogout()
+      }
       await disconnect()
+      resetAuth()
     } catch (error) {
       console.error('Disconnect error:', error)
     } finally {
@@ -47,11 +92,7 @@ export function CustomConnectButton() {
     }
   }
 
-  // Handle EVM wallet connection
-  const handleConnectEVM = async () => {
-    setShowWalletMenu(false)
-    await connectEVM()
-  }
+
 
   // Handle NEAR wallet connection  
   const handleConnectNEAR = async () => {
@@ -62,58 +103,64 @@ export function CustomConnectButton() {
   // If wallet is connected, show wallet info
   if (wallet.isConnected && wallet.activeWallet) {
     return (
-      <div className="flex items-center gap-2">
-        {/* Show error if any */}
-        {wallet.error && (
-          <WalletErrorInline
-            error={wallet.error}
-            onRetry={() => {
-              if (wallet.activeWallet?.type === 'evm') {
-                connectEVM()
-              } else {
-                connectNEAR()
-              }
-            }}
-            onDismiss={clearError}
-          />
-        )}
+      <>
+        <div className="flex items-center gap-2">
+          {/* Show error if any */}
+          {wallet.error && (
+            <WalletErrorInline
+              error={wallet.error}
+              onRetry={() => {
+                if (wallet.activeWallet?.type === 'evm') {
+                    // For EVM, we need to open RainbowKit modal
+                  // This would require passing openConnectModal from parent
+                  console.log('EVM retry not implemented yet')
+                } else {
+                  connectNEAR()
+                }
+              }}
+              onDismiss={clearError}
+            />
+          )}
 
-        {/* Wallet Info */}
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-2 border-primary/50 hover:bg-primary/10 hover:border-primary transition-all duration-300"
-        >
-          <Wallet className="w-4 h-4" />
-          <div className="flex flex-col items-start">
-            <span className="text-xs">
-              {wallet.activeWallet.address.slice(0, 8)}...{wallet.activeWallet.address.slice(-6)}
-            </span>
-            {wallet.activeWallet.balance && (
-              <span className="text-xs text-primary">
-                {wallet.activeWallet.balance}
+
+
+          {/* Wallet Info */}
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-2 border-primary/50 hover:bg-primary/10 hover:border-primary transition-all duration-300"
+          >
+            <Wallet className="w-4 h-4" />
+            <div className="flex flex-col items-start">
+              <span className="text-xs">
+                {wallet.activeWallet.address.slice(0, 8)}...{wallet.activeWallet.address.slice(-6)}
               </span>
-            )}
-            {wallet.activeWallet.chainName && (
-              <span className="text-xs text-muted-foreground">
-                {wallet.activeWallet.chainName}
-              </span>
-            )}
-          </div>
-        </Button>
+              {wallet.activeWallet.balance && (
+                <span className="text-xs text-primary">
+                  {wallet.activeWallet.balance}
+                </span>
+              )}
+              {wallet.activeWallet.chainName && (
+                <span className="text-xs text-muted-foreground">
+                  {wallet.activeWallet.chainName}
+                </span>
+              )}
+            </div>
+          </Button>
         
-        {/* Disconnect Button */}
-        <Button
-          onClick={handleDisconnect}
-          disabled={isDisconnecting}
-          variant="outline"
-          size="sm"
-          className="gap-2 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300 disabled:opacity-50"
-        >
-          <LogOut className="w-4 h-4" />
-          {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
-        </Button>
-      </div>
+          {/* Disconnect Button */}
+          <Button
+            onClick={handleDisconnect}
+            disabled={isDisconnecting}
+            variant="outline"
+            size="sm"
+            className="gap-2 border-red-500/50 hover:bg-red-500/10 hover:border-red-500 transition-all duration-300 disabled:opacity-50"
+          >
+            <LogOut className="w-4 h-4" />
+            {isDisconnecting ? 'Disconnecting...' : 'Disconnect'}
+          </Button>
+        </div>
+      </>
     )
   }
 
@@ -167,23 +214,30 @@ export function CustomConnectButton() {
       {showWalletMenu && (
         <div className="absolute top-full mt-2 left-0 bg-gray-900/95 backdrop-blur-sm border border-gray-700/50 rounded-xl shadow-2xl z-50 w-full min-w-[200px]">
           <div className="p-2">
-            {/* EVM Wallet Option */}
-            <Button
-              onClick={handleConnectEVM}
-              disabled={!wallet.available.evm}
-              variant="ghost"
-              className="w-full justify-start gap-3 h-10 hover:bg-gray-800/60 px-3 py-2 text-white rounded-lg transition-all duration-200 disabled:opacity-50"
-            >
-              <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-lg border border-orange-500/30">
-                <span className="text-lg">🦊</span>
-              </div>
-              <div className="font-medium text-sm text-white">
-                EVM Wallet
-                {!wallet.available.evm && (
-                  <span className="text-xs text-red-400 block">Not Available</span>
-                )}
-              </div>
-            </Button>
+            {/* EVM Wallet Option - Use RainbowKit's ConnectButton */}
+            <ConnectButton.Custom>
+              {({ openConnectModal }) => (
+                <Button
+                  onClick={() => {
+                    setShowWalletMenu(false)
+                    openConnectModal()
+                  }}
+                  disabled={!wallet.available.evm}
+                  variant="ghost"
+                  className="w-full justify-start gap-3 h-10 hover:bg-gray-800/60 px-3 py-2 text-white rounded-lg transition-all duration-200 disabled:opacity-50"
+                >
+                  <div className="w-6 h-6 flex items-center justify-center bg-gradient-to-br from-orange-500/20 to-orange-600/20 rounded-lg border border-orange-500/30">
+                    <span className="text-lg">🦊</span>
+                  </div>
+                  <div className="font-medium text-sm text-white">
+                    EVM Wallet
+                    {!wallet.available.evm && (
+                      <span className="text-xs text-red-400 block">Not Available</span>
+                    )}
+                  </div>
+                </Button>
+              )}
+            </ConnectButton.Custom>
             
             <div className="h-px bg-gradient-to-r from-transparent via-gray-700/50 to-transparent my-1"></div>
             
