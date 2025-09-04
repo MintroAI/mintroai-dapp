@@ -253,7 +253,7 @@ export function AuthenticationModal({
               <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>
-                  Expires in {Math.max(0, Math.floor((currentChallenge.expiresAt ?? Date.now() - Date.now()) / 1000))} seconds
+                  Expires in {Math.max(0, Math.floor(((currentChallenge.expiresAt ?? Date.now()) - Date.now()) / 1000))} seconds
                 </span>
               </div>
             )}

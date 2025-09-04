@@ -232,14 +232,19 @@ export function useAuthentication() {
       if (!challenge) return false
 
       // Check if challenge is expired
-      if (challenge.expiresAt && Date.now() > challenge.expiresAt) {
-        setAuthError({
-          code: 'CHALLENGE_EXPIRED',
-          message: 'Challenge expired. Please try again.',
-          retryable: true
-        })
-        setRetryCount(prev => prev + 1)
-        return false // Don't auto-retry
+      if (challenge.expiresAt) {
+        const expiresAtMs = typeof challenge.expiresAt === 'number'
+          ? challenge.expiresAt
+          : new Date(challenge.expiresAt).getTime();
+        if (Date.now() > expiresAtMs) {
+          setAuthError({
+            code: 'CHALLENGE_EXPIRED',
+            message: 'Challenge expired. Please try again.',
+            retryable: true
+          })
+          setRetryCount(prev => prev + 1)
+          return false // Don't auto-retry
+        }
       }
 
       // Step 2: Request signature
@@ -297,17 +302,6 @@ export function useAuthentication() {
       reset()
     }
   }, [authToken, wallet.activeWallet, reset])
-
-  // Check if authenticated
-  const isAuthenticated = useCallback((): boolean => {
-    const token = localStorage.getItem('auth_token')
-    const expires = localStorage.getItem('auth_expires')
-    
-    if (!token || !expires) return false
-    
-    const expiresAt = parseInt(expires)
-    return Date.now() < expiresAt
-  }, [])
 
   // Calculate authentication status
   const [isAuthenticatedState, setIsAuthenticatedState] = useState(false)

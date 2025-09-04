@@ -109,15 +109,7 @@ export function CustomConnectButton() {
           {wallet.error && (
             <WalletErrorInline
               error={wallet.error}
-              onRetry={() => {
-                if (wallet.activeWallet?.type === 'evm') {
-                    // For EVM, we need to open RainbowKit modal
-                  // This would require passing openConnectModal from parent
-                  console.log('EVM retry not implemented yet')
-                } else {
-                  connectNEAR()
-                }
-              }}
+              onRetry={wallet.activeWallet?.type === 'near' ? connectNEAR : undefined}
               onDismiss={clearError}
             />
           )}
