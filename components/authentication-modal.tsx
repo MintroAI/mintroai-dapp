@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useAuthentication } from '@/hooks/useAuthentication'
 import { useWallet } from '@/contexts/WalletContext'
 import {
@@ -53,12 +53,20 @@ export function AuthenticationModal({
   const [showMessage, setShowMessage] = useState(false)
   const [progress, setProgress] = useState(0)
 
+  const handleAuthenticate = useCallback(async () => {
+    setShowMessage(false)
+    const success = await authenticate()
+    if (!success && authError?.retryable) {
+      setShowMessage(true)
+    }
+  }, [authenticate, authError?.retryable])
+
   // Handle authentication flow
   useEffect(() => {
     if (open && wallet.activeWallet && trigger === 'auto') {
       handleAuthenticate()
     }
-  }, [open, wallet.activeWallet, trigger])
+  }, [open, wallet.activeWallet, trigger, handleAuthenticate])
 
   // Update progress based on state
   useEffect(() => {
@@ -95,13 +103,6 @@ export function AuthenticationModal({
     }
   }, [authState, onSuccess, onClose, reset])
 
-  const handleAuthenticate = async () => {
-    setShowMessage(false)
-    const success = await authenticate()
-    if (!success && authError?.retryable) {
-      setShowMessage(true)
-    }
-  }
 
   const handleRetry = () => {
     reset()
@@ -252,7 +253,7 @@ export function AuthenticationModal({
               <div className="flex items-center justify-center space-x-2 text-xs text-muted-foreground">
                 <Clock className="w-3 h-3" />
                 <span>
-                  Expires in {Math.max(0, Math.floor((currentChallenge.expiresAt - Date.now()) / 1000))} seconds
+                  Expires in {Math.max(0, Math.floor((currentChallenge.expiresAt ?? Date.now() - Date.now()) / 1000))} seconds
                 </span>
               </div>
             )}
