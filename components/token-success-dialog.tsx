@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import confetti from 'canvas-confetti'
 import { useChainId } from 'wagmi'
-import { type Chain, /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, bsc, auroraTestnet } from 'viem/chains'
+import { type Chain, /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, bsc, auroraTestnet, theta, thetaTestnet } from 'viem/chains'
 import { hyperEVM } from '@/config/customChains'
 import { ExternalLink } from 'lucide-react'
 import { useNearWallet } from '@/contexts/NearWalletContext'
@@ -17,7 +17,7 @@ interface TokenSuccessDialogProps {
   tokenAddress: string
   tokenName: string
   tokenSymbol: string
-  targetChainId?: string // Near Chain Signatures için target chain
+  targetChainId?: string // Target Chain ID for Near Chain Signatures
 }
 
 export function TokenSuccessDialog({
@@ -31,9 +31,9 @@ export function TokenSuccessDialog({
   const chainId = useChainId()
   const { isConnected: nearConnected } = useNearWallet()
 
-  // Chain'e göre block explorer URL'ini bul
+  // Get block explorer URL based on chain
   const getExplorerUrl = () => {
-    // Eğer Near cüzdanı bağlıysa ve target chain belirtilmişse, target chain explorer'ını kullan
+    // If Near wallet is connected and target chain is specified, use target chain explorer
     if (nearConnected && targetChainId) {
       const targetChainIdNum = parseInt(targetChainId)
       const targetNetwork = SUPPORTED_NETWORKS[targetChainIdNum]
@@ -42,7 +42,7 @@ export function TokenSuccessDialog({
       }
     }
 
-    // Diğer EVM chainleri için mevcut logic
+    // For other EVM chains, use existing logic
     const chains: Record<number, Chain> = {
       // [mainnet.id]: mainnet,
       // [polygon.id]: polygon,
@@ -54,6 +54,8 @@ export function TokenSuccessDialog({
       [bsc.id]: bsc,
       [auroraTestnet.id]: auroraTestnet,
       [hyperEVM.id]: hyperEVM,
+      [theta.id]: theta,
+      [thetaTestnet.id]: thetaTestnet,
     }
     
     const chain = chains[chainId]
