@@ -38,20 +38,26 @@ export function CustomConnectButton() {
         console.log('🔐 EVM wallet connected, starting authentication...')
         setHasTriggeredAuth(true)
         
-        // Directly call authenticate without showing modal
-        // MetaMask will show its own popup
-        const success = await authenticate()
-        
-        if (!success) {
-          // If authentication failed or was cancelled
-          setUserCancelledAuth(true)
-          console.log('❌ Authentication failed or cancelled')
-        }
+        // Small delay to ensure wallet is fully connected
+        setTimeout(async () => {
+          const success = await authenticate()
+          
+          if (!success) {
+            // Authentication failed or was cancelled
+            console.log('❌ Authentication failed or cancelled, disconnecting wallet...')
+            setUserCancelledAuth(true)
+            
+            // Immediately disconnect wallet if authentication fails
+            await disconnect()
+            setHasTriggeredAuth(false)
+            setUserCancelledAuth(false)
+          }
+        }, 500)
       }
     }
     
     triggerAuth()
-  }, [wallet.isConnected, wallet.activeWallet?.type, isAuthenticated, hasTriggeredAuth, userCancelledAuth, authenticate])
+  }, [wallet.isConnected, wallet.activeWallet?.type, isAuthenticated, hasTriggeredAuth, userCancelledAuth, authenticate, disconnect])
 
   // Reset auth trigger flag when wallet disconnects
   useEffect(() => {

@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { useWallet } from '@/contexts/WalletContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { 
   AuthChallenge, 
   SignatureResponse, 
@@ -14,11 +15,11 @@ const AUTH_RETRY_LIMIT = 3
 
 export function useAuthentication() {
   const { wallet } = useWallet()
+  const { setAuthToken, clearAuth, authToken, isAuthenticated } = useAuth()
   const [authState, setAuthState] = useState<AuthState>('idle')
   const [authError, setAuthError] = useState<AuthError | null>(null)
   const [retryCount, setRetryCount] = useState(0)
   const [currentChallenge, setCurrentChallenge] = useState<AuthChallenge | null>(null)
-  const [authToken, setAuthToken] = useState<string | null>(null)
 
   // Request authentication challenge from backend
   const requestChallenge = useCallback(async (): Promise<AuthChallenge | null> => {
@@ -175,21 +176,20 @@ export function useAuthentication() {
 
       const result = await response.json()
       
-      // Backend returns access_token and expires_at
+      // Backend returns access_token and expires_in (seconds from now)
       if (result.access_token) {
         setAuthState('authenticated')
-        setAuthToken(result.access_token)
         
-        // Store auth token
-        localStorage.setItem('auth_token', result.access_token)
-        if (result.expires_at) {
-          localStorage.setItem('auth_expires', result.expires_at)
-        }
+        // Calculate expiry time: current time + expires_in seconds
+        const expiresAtMs = Date.now() + (result.expires_in * 1000)
+        
+        // Store auth token in memory via AuthContext
+        setAuthToken(result.access_token, expiresAtMs)
         
         return {
           success: true,
           token: result.access_token,
-          expiresAt: result.expires_at ? new Date(result.expires_at).getTime() : undefined
+          expiresAt: expiresAtMs
         }
       } else {
         throw new Error('No access token received')
@@ -203,7 +203,7 @@ export function useAuthentication() {
       setAuthState('failed')
       return { success: false, error: error instanceof Error ? error.message : 'Verification failed' }
     }
-  }, [])
+  }, [setAuthToken])
 
   // Main authentication flow
   const authenticate = useCallback(async (): Promise<boolean> => {
@@ -274,10 +274,8 @@ export function useAuthentication() {
     setAuthError(null)
     setRetryCount(0)
     setCurrentChallenge(null)
-    setAuthToken(null)
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('auth_expires')
-  }, [])
+    clearAuth() // Clear auth from context
+  }, [clearAuth])
 
   // Logout function
   const logout = useCallback(async () => {
@@ -303,39 +301,6 @@ export function useAuthentication() {
     }
   }, [authToken, wallet.activeWallet, reset])
 
-  // Calculate authentication status
-  const [isAuthenticatedState, setIsAuthenticatedState] = useState(false)
-  
-  // Update authentication state when token changes
-  useEffect(() => {
-    const checkAuth = () => {
-      const token = localStorage.getItem('auth_token')
-      const expires = localStorage.getItem('auth_expires')
-      
-      if (!token || !expires) {
-        setIsAuthenticatedState(false)
-        return
-      }
-      
-      // Parse expires_at - it might be a date string or timestamp
-      let expiresAt: number
-      if (expires.includes('-') || expires.includes('T')) {
-        // It's a date string
-        expiresAt = new Date(expires).getTime()
-      } else {
-        // It's already a timestamp
-        expiresAt = parseInt(expires)
-      }
-      
-      setIsAuthenticatedState(Date.now() < expiresAt)
-    }
-    
-    checkAuth()
-    // Check periodically
-    const interval = setInterval(checkAuth, 5000)
-    return () => clearInterval(interval)
-  }, [authToken, authState])
-
   return {
     authState,
     authError,
@@ -343,7 +308,7 @@ export function useAuthentication() {
     authenticate,
     logout,
     reset,
-    isAuthenticated: isAuthenticatedState,
+    isAuthenticated, // Now from AuthContext
     retryCount,
     maxRetries: AUTH_RETRY_LIMIT,
     currentChallenge,
