@@ -7,7 +7,7 @@ import {
   darkTheme,
 } from '@rainbow-me/rainbowkit'
 import { WagmiProvider } from 'wagmi'
-import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, } from 'viem/chains'
+import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet } from 'viem/chains'
 import { hyperEVM } from '@/config/customChains'
 import { SUPPORTED_NETWORKS } from '@/config/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
