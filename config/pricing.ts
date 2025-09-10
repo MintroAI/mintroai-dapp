@@ -116,7 +116,8 @@ export function calculateTokenPrice(params: TokenPricingParams, isTestnet: boole
     });
   }
 
-  breakdown.total = totalUSD;
+  // Round to 2 decimal places to avoid floating point issues
+  breakdown.total = Math.round(totalUSD * 100) / 100;
   return breakdown;
 }
 
@@ -146,7 +147,10 @@ export function formatPriceDisplay(price: number, isFree: boolean = false): stri
   if (isFree || price === 0) {
     return '$0';
   }
-  return `$${price}`;
+  // Ensure proper formatting with 2 decimal places if needed
+  const roundedPrice = Math.round(price * 100) / 100;
+  // Format with proper decimal places (e.g., 0.1 -> $0.10, 0.3 -> $0.30)
+  return `$${roundedPrice.toFixed(2).replace(/\.00$/, '')}`;
 }
 
 // Check if network is testnet
