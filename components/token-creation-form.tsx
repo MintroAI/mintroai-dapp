@@ -22,6 +22,7 @@ import { MPC_CONTRACT, NEAR_NETWORK_ID, DEFAULT_DERIVATION_PATH } from '@/config
 import { TokenConfirmationDialog } from "@/components/token-confirmation-dialog"
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { TokenSuccessDialog } from "@/components/token-success-dialog"
+import { useTokenPricing } from '@/hooks/usePricing'
 
 const tokenFormSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -107,6 +108,21 @@ export function TokenCreationForm() {
   const [deployedAddress, setDeployedAddress] = React.useState<string | null>(null)
 
   const { deploy, isPending, isWaiting, isSuccess, error, hash, receipt } = useTokenDeploy()
+
+  // Calculate price based on form values
+  const formValues = form.watch()
+  const { displayText: priceDisplay } = useTokenPricing({
+    mintable: formValues.mintable,
+    burnable: formValues.burnable,
+    pausable: formValues.pausable,
+    blacklist: formValues.blacklist,
+    maxTx: formValues.maxTx,
+    maxTxAmount: formValues.maxTxAmount,
+    transferTax: formValues.transferTax,
+    antiBot: formValues.antiBot,
+    cooldownTime: formValues.cooldownTime,
+    targetChain: formValues.targetChain
+  })
 
   // Section'ları field'larla eşleştir
   const fieldToSection: { [key: string]: string } = {
@@ -558,6 +574,10 @@ export function TokenCreationForm() {
                           checked={value as boolean}
                           onCheckedChange={(checked: CheckedState) => {
                             onChange(checked === true)
+                            // Reset maxTxAmount when maxTx is disabled
+                            if (checked !== true) {
+                              form.setValue('maxTxAmount', 0)
+                            }
                           }}
                           className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           isUpdated={updatedFields.has("maxTx")}
@@ -652,6 +672,10 @@ export function TokenCreationForm() {
                           checked={value as boolean}
                           onCheckedChange={(checked: CheckedState) => {
                             onChange(checked === true)
+                            // Reset cooldownTime when antiBot is disabled
+                            if (checked !== true) {
+                              form.setValue('cooldownTime', 0)
+                            }
                           }}
                           className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           isUpdated={updatedFields.has("antiBot")}
@@ -662,27 +686,30 @@ export function TokenCreationForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="cooldownTime"
-                  render={({ field: { value, onChange, ...field } }) => (
-                    <FormItem>
-                      <FormLabel className="text-white">Cooldown Time (seconds)</FormLabel>
-                      <FormControl>
-                        <AnimatedFormInput
-                          type="number"
-                          value={value.toString()}
-                          onChange={(e) => onChange(Number(e.target.value))}
-                          className="bg-white/5 border-white/10 text-white placeholder:text-white/30
-                            focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300"
-                          isUpdated={updatedFields.has("cooldownTime")}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-400" />
-                    </FormItem>
-                  )}
-                />
+                {form.watch("antiBot") && (
+                  <FormField
+                    control={form.control}
+                    name="cooldownTime"
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Cooldown Time (seconds)</FormLabel>
+                        <FormControl>
+                          <AnimatedFormInput
+                            type="number"
+                            placeholder="60"
+                            value={value.toString()}
+                            onChange={(e) => onChange(Number(e.target.value))}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/30
+                              focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300"
+                            isUpdated={updatedFields.has("cooldownTime")}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -694,7 +721,9 @@ export function TokenCreationForm() {
                 transition-all duration-300 hover:shadow-[0_0_20px_rgba(124,58,237,0.3)]
                 relative overflow-hidden group"
             >
-              <span className="relative z-10">Create Token</span>
+              <span className="relative z-10">
+                Create Token {priceDisplay && `(${priceDisplay})`}
+              </span>
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 
                 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             </Button>
