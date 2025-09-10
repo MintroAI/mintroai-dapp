@@ -36,7 +36,7 @@ export function useTokenDeploy() {
   const isNearConnected = !!accountId;
   const isEVMConnected = !!address;
 
-  const deploy = async (contractCode: string, tokenConfig?: any) => {
+  const deploy = async (contractCode: string, tokenConfig?: any , paymentAmount: bigint = BigInt(0), deadline: bigint = BigInt(0), nonce: bigint = BigInt(0), signature: string = '') => {
     try {
       setError(null);
       setIsSuccess(false);
@@ -91,9 +91,10 @@ export function useTokenDeploy() {
         await deployTokenEVM({
           address: SUPPORTED_NETWORKS[chainId].factoryAddress,
           abi: FACTORY_ABI,
-          functionName: 'deployBytecode',
-          args: [`0x${formattedBytecode}` as `0x${string}`],
-          gas: BigInt(2000000)
+          functionName: 'deployBytecodeWithPayment',
+          args: [`0x${formattedBytecode}` as `0x${string}`, paymentAmount, deadline, nonce, signature as `0x${string}`],
+          gas: BigInt(2000000),
+          value: paymentAmount
         })
       } else {
         throw new Error('No wallet connected');

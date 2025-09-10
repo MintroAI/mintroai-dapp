@@ -15,7 +15,7 @@ import { type CheckedState } from "@radix-ui/react-checkbox"
 import { Coins, Shield, Gauge, Percent, Sparkles } from "lucide-react"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { useSession } from "@/hooks/useSession"
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { useNearWallet } from '@/contexts/NearWalletContext'
 import { EVM } from 'multichain-tools'
 import { MPC_CONTRACT, NEAR_NETWORK_ID, DEFAULT_DERIVATION_PATH } from '@/config/chain-signatures'
@@ -77,6 +77,7 @@ const TARGET_CHAINS = [
 export function TokenCreationForm() {
   const { sessionId, isInitialized } = useSession()
   const { address } = useAccount()
+  const chainId = useChainId()
   const { accountId, selector } = useNearWallet()
   const form = useForm<TokenFormValues>({
     resolver: zodResolver(tokenFormSchema),
@@ -101,7 +102,7 @@ export function TokenCreationForm() {
   const [updatedFields, setUpdatedFields] = React.useState<Set<string>>(new Set())
   const [updatedSections, setUpdatedSections] = React.useState<Set<string>>(new Set())
   const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [deploymentStatus, setDeploymentStatus] = React.useState<'idle' | 'creating' | 'compiling' | 'deploying' | 'success' | 'error'>('idle')
+  const [deploymentStatus, setDeploymentStatus] = React.useState<'idle' | 'creating' | 'compiling' | 'pricing' | 'deploying' | 'success' | 'error'>('idle')
   const [showSuccess, setShowSuccess] = React.useState(false)
   const [deployedAddress, setDeployedAddress] = React.useState<string | null>(null)
 
@@ -212,8 +213,9 @@ export function TokenCreationForm() {
     try {
       setDeploymentStatus('creating')
       
-      // Determine owner address based on connected wallet
+      // Determine owner address and chainId based on connected wallet
       let ownerAddress = address; // EVM wallet address (if connected)
+      let currentChainId: string;
       
       // If NEAR wallet is connected, derive the Chain Signatures address
       if (accountId && selector) {
@@ -221,6 +223,9 @@ export function TokenCreationForm() {
         if (!targetChain) {
           throw new Error('Invalid target chain selected');
         }
+
+        // Use the target chain ID for NEAR Chain Signatures
+        currentChainId = targetChain.id;
 
         // Initialize Chain Signatures to get derived address
         const evm = new EVM({
@@ -240,6 +245,9 @@ export function TokenCreationForm() {
         ownerAddress = ethers.getAddress(derivedAddress) as `0x${string}`;
         console.log('User derived address:', derivedAddress)
 
+      } else {
+        // Use the current EVM chain ID
+        currentChainId = chainId.toString();
       }
 
       const contractData = {
@@ -251,6 +259,8 @@ export function TokenCreationForm() {
         decimals: form.getValues().decimals,
         initialSupply: form.getValues().initialSupply,
         ownerAddress: ownerAddress,
+        chainId: currentChainId,
+        isChainSignatures: !!(accountId && selector), // true if NEAR wallet is connected, false if EVM wallet is connected
         mintable: form.getValues().mintable,
         burnable: form.getValues().burnable,
         pausable: form.getValues().pausable,
@@ -294,8 +304,33 @@ export function TokenCreationForm() {
 
       const compileData = await compileResponse.json();
 
+      
+      // 3. Price and Signature Service
+      setDeploymentStatus('pricing')
 
-      // 3. Deploy contract
+      const priceAndSignatureResponse = await fetch('/api/price-and-signature-service', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contractData, bytecode: compileData.bytecode }),
+      });
+
+      if (!priceAndSignatureResponse.ok) {
+        const errorData = await priceAndSignatureResponse.text();
+        console.error('Price and signature service error:', {
+          status: priceAndSignatureResponse.status,
+          statusText: priceAndSignatureResponse.statusText,
+          error: errorData
+        });
+        throw new Error(`Failed to get price and signature: ${errorData}`);
+      }
+
+      const priceAndSignatureData = await priceAndSignatureResponse.json();
+      console.log('Price and signature data:', priceAndSignatureData);
+
+
+      // 4. Deploy contract
       setDeploymentStatus('deploying')
       
       if (accountId) {
@@ -312,7 +347,7 @@ export function TokenCreationForm() {
         });
       } else {
         // EVM deployment
-        await deploy(compileData.bytecode);
+        await deploy(compileData.bytecode, null , priceAndSignatureData.data.txValue, priceAndSignatureData.data.deploymentData.deadline, priceAndSignatureData.data.deploymentData.nonce, priceAndSignatureData.data.signature);
       }
       
 
