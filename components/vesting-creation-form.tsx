@@ -22,6 +22,7 @@ import { useSession } from "@/hooks/useSession"
 import { useAccount, useChainId } from 'wagmi'
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { useWebSocket } from "@/hooks/useWebSocket"
+import { useVestingPricing } from '@/hooks/usePricing'
 
 const vestingFormSchema = z.object({
   projectName: z.string().min(1, "Project name is required"),
@@ -77,6 +78,9 @@ export function VestingCreationForm() {
     control: form.control,
     name: "vestingUsers"
   })
+
+  // Calculate price for vesting contract
+  const { displayText: priceDisplay } = useVestingPricing()
 
   const addVestingUser = () => {
     append({ address: "", amount: "" })
@@ -823,7 +827,7 @@ export function VestingCreationForm() {
                   relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Create Vesting Contract
+                  Create Vesting Contract {priceDisplay && `(${priceDisplay})`}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 
                   translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
