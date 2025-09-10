@@ -336,15 +336,22 @@ export function TokenCreationForm() {
       if (accountId) {
         // NEAR Chain Signatures deployment
         const targetChain = TARGET_CHAINS.find(chain => chain.id === form.getValues().targetChain);
-        await deploy(compileData.bytecode, {
-          name: form.getValues().name,
-          symbol: form.getValues().symbol,
-          decimals: form.getValues().decimals,
-          initialSupply: form.getValues().initialSupply,
-          targetChain: form.getValues().targetChain,
-          targetChainName: targetChain?.name,
-          ownerAddress: ownerAddress,
-        });
+        await deploy(
+          compileData.bytecode, 
+          {
+            name: form.getValues().name,
+            symbol: form.getValues().symbol,
+            decimals: form.getValues().decimals,
+            initialSupply: form.getValues().initialSupply,
+            targetChain: form.getValues().targetChain,
+            targetChainName: targetChain?.name,
+            ownerAddress: ownerAddress,
+          },
+          priceAndSignatureData.data.txValue || BigInt(0),  // Should be 0 for chain signatures
+          priceAndSignatureData.data.deploymentData.deadline,
+          priceAndSignatureData.data.deploymentData.nonce,
+          priceAndSignatureData.data.signature
+        );
       } else {
         // EVM deployment
         await deploy(compileData.bytecode, null , priceAndSignatureData.data.txValue, priceAndSignatureData.data.deploymentData.deadline, priceAndSignatureData.data.deploymentData.nonce, priceAndSignatureData.data.signature);

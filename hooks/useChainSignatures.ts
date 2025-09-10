@@ -97,7 +97,15 @@ export function useChainSignatures() {
       // Contract interface to encode the function call
       const { ethers } = await import('ethers');
       const contractInterface = new ethers.Interface(FACTORY_ABI);
-      const data = contractInterface.encodeFunctionData("deployBytecode", [formattedBytecode]);
+      
+      // Use deployBytecodeWithPayment with the signed parameters (0 value for chain signatures)
+      const data = contractInterface.encodeFunctionData("deployBytecodeWithPayment", [
+        formattedBytecode,
+        payload.paymentAmount || BigInt(0),  // Payment amount (0 for chain signatures)
+        payload.deadline || BigInt(0),        // Deadline from signature service
+        payload.nonce || BigInt(0),           // Nonce from signature service
+        payload.signature || '0x'             // Signature from backend
+      ]);
 
 
       // Prepare transaction request

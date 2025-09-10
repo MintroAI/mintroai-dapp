@@ -47,7 +47,7 @@ export function useTokenDeploy() {
         // Use NEAR Chain Signatures
         setIsPending(true);
         
-        // Prepare payload for Chain Signatures
+        // Prepare payload for Chain Signatures with payment parameters
         const payload: TokenDeploymentPayload = {
           bytecode: contractCode,
           tokenConfig: {
@@ -58,7 +58,11 @@ export function useTokenDeploy() {
             target_chain: tokenConfig.targetChain,
             target_chain_name: tokenConfig.targetChainName,
             owner_address: tokenConfig.ownerAddress || 'pending',
-          }
+          },
+          paymentAmount,
+          deadline,
+          nonce,
+          signature
         };
 
         setIsPending(false);
