@@ -3,17 +3,17 @@ export const PRICING_CONFIG = {
   token: {
     base: 0, // Free for basic token
     basicFeatures: {
-      price: 0.1, // One-time fee if ANY basic feature is selected
+      price: 49.99, // One-time fee if ANY basic feature is selected
       features: ['mintable', 'burnable', 'pausable', 'blacklist'] as const
     },
     advancedFeatures: {
-      maxTx: 0.1,       // If maxTxAmount > 0
-      transferTax: 0.1,  // If transferTax > 0
-      antiBot: 0.1      // If cooldownTime > 0 (antiBot protection)
+      maxTx: 19.99,       // If maxTxAmount > 0
+      transferTax: 19.99,  // If transferTax > 0
+      antiBot: 19.99      // If cooldownTime > 0 (antiBot protection)
     }
   },
   vesting: {
-    base: 0.1 // Fixed price for vesting contract
+    base: 19.99 // Fixed price for vesting contract
   }
 };
 
