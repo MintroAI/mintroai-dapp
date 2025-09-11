@@ -15,13 +15,14 @@ import { type CheckedState } from "@radix-ui/react-checkbox"
 import { Coins, Shield, Gauge, Percent, Sparkles } from "lucide-react"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { useSession } from "@/hooks/useSession"
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { useNearWallet } from '@/contexts/NearWalletContext'
 import { EVM } from 'multichain-tools'
 import { MPC_CONTRACT, NEAR_NETWORK_ID, DEFAULT_DERIVATION_PATH } from '@/config/chain-signatures'
 import { TokenConfirmationDialog } from "@/components/token-confirmation-dialog"
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { TokenSuccessDialog } from "@/components/token-success-dialog"
+import { useTokenPricing } from '@/hooks/usePricing'
 
 const tokenFormSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -77,6 +78,7 @@ const TARGET_CHAINS = [
 export function TokenCreationForm() {
   const { sessionId, isInitialized } = useSession()
   const { address } = useAccount()
+  const chainId = useChainId()
   const { accountId, selector } = useNearWallet()
   const form = useForm<TokenFormValues>({
     resolver: zodResolver(tokenFormSchema),
@@ -101,11 +103,26 @@ export function TokenCreationForm() {
   const [updatedFields, setUpdatedFields] = React.useState<Set<string>>(new Set())
   const [updatedSections, setUpdatedSections] = React.useState<Set<string>>(new Set())
   const [showConfirmation, setShowConfirmation] = React.useState(false);
-  const [deploymentStatus, setDeploymentStatus] = React.useState<'idle' | 'creating' | 'compiling' | 'deploying' | 'success' | 'error'>('idle')
+  const [deploymentStatus, setDeploymentStatus] = React.useState<'idle' | 'creating' | 'compiling' | 'pricing' | 'deploying' | 'success' | 'error'>('idle')
   const [showSuccess, setShowSuccess] = React.useState(false)
   const [deployedAddress, setDeployedAddress] = React.useState<string | null>(null)
 
   const { deploy, isPending, isWaiting, isSuccess, error, hash, receipt } = useTokenDeploy()
+
+  // Calculate price based on form values
+  const formValues = form.watch()
+  const { displayText: priceDisplay } = useTokenPricing({
+    mintable: formValues.mintable,
+    burnable: formValues.burnable,
+    pausable: formValues.pausable,
+    blacklist: formValues.blacklist,
+    maxTx: formValues.maxTx,
+    maxTxAmount: formValues.maxTxAmount,
+    transferTax: formValues.transferTax,
+    antiBot: formValues.antiBot,
+    cooldownTime: formValues.cooldownTime,
+    targetChain: formValues.targetChain
+  })
 
   // Section'ları field'larla eşleştir
   const fieldToSection: { [key: string]: string } = {
@@ -212,8 +229,9 @@ export function TokenCreationForm() {
     try {
       setDeploymentStatus('creating')
       
-      // Determine owner address based on connected wallet
+      // Determine owner address and chainId based on connected wallet
       let ownerAddress = address; // EVM wallet address (if connected)
+      let currentChainId: string;
       
       // If NEAR wallet is connected, derive the Chain Signatures address
       if (accountId && selector) {
@@ -221,6 +239,9 @@ export function TokenCreationForm() {
         if (!targetChain) {
           throw new Error('Invalid target chain selected');
         }
+
+        // Use the target chain ID for NEAR Chain Signatures
+        currentChainId = targetChain.id;
 
         // Initialize Chain Signatures to get derived address
         const evm = new EVM({
@@ -240,6 +261,9 @@ export function TokenCreationForm() {
         ownerAddress = ethers.getAddress(derivedAddress) as `0x${string}`;
         console.log('User derived address:', derivedAddress)
 
+      } else {
+        // Use the current EVM chain ID
+        currentChainId = chainId.toString();
       }
 
       const contractData = {
@@ -251,6 +275,8 @@ export function TokenCreationForm() {
         decimals: form.getValues().decimals,
         initialSupply: form.getValues().initialSupply,
         ownerAddress: ownerAddress,
+        chainId: currentChainId,
+        isChainSignatures: !!(accountId && selector), // true if NEAR wallet is connected, false if EVM wallet is connected
         mintable: form.getValues().mintable,
         burnable: form.getValues().burnable,
         pausable: form.getValues().pausable,
@@ -294,25 +320,57 @@ export function TokenCreationForm() {
 
       const compileData = await compileResponse.json();
 
+      
+      // 3. Price and Signature Service
+      setDeploymentStatus('pricing')
 
-      // 3. Deploy contract
+      const priceAndSignatureResponse = await fetch('/api/price-and-signature-service', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contractData, bytecode: compileData.bytecode }),
+      });
+
+      if (!priceAndSignatureResponse.ok) {
+        const errorData = await priceAndSignatureResponse.text();
+        console.error('Price and signature service error:', {
+          status: priceAndSignatureResponse.status,
+          statusText: priceAndSignatureResponse.statusText,
+          error: errorData
+        });
+        throw new Error(`Failed to get price and signature: ${errorData}`);
+      }
+
+      const priceAndSignatureData = await priceAndSignatureResponse.json();
+      console.log('Price and signature data:', priceAndSignatureData);
+
+
+      // 4. Deploy contract
       setDeploymentStatus('deploying')
       
       if (accountId) {
         // NEAR Chain Signatures deployment
         const targetChain = TARGET_CHAINS.find(chain => chain.id === form.getValues().targetChain);
-        await deploy(compileData.bytecode, {
-          name: form.getValues().name,
-          symbol: form.getValues().symbol,
-          decimals: form.getValues().decimals,
-          initialSupply: form.getValues().initialSupply,
-          targetChain: form.getValues().targetChain,
-          targetChainName: targetChain?.name,
-          ownerAddress: ownerAddress,
-        });
+        await deploy(
+          compileData.bytecode, 
+          {
+            name: form.getValues().name,
+            symbol: form.getValues().symbol,
+            decimals: form.getValues().decimals,
+            initialSupply: form.getValues().initialSupply,
+            targetChain: form.getValues().targetChain,
+            targetChainName: targetChain?.name,
+            ownerAddress: ownerAddress,
+          },
+          priceAndSignatureData.data.txValue || BigInt(0),  // Should be 0 for chain signatures
+          priceAndSignatureData.data.deploymentData.deadline,
+          priceAndSignatureData.data.deploymentData.nonce,
+          priceAndSignatureData.data.signature
+        );
       } else {
         // EVM deployment
-        await deploy(compileData.bytecode);
+        await deploy(compileData.bytecode, null , priceAndSignatureData.data.txValue, priceAndSignatureData.data.deploymentData.deadline, priceAndSignatureData.data.deploymentData.nonce, priceAndSignatureData.data.signature);
       }
       
 
@@ -516,6 +574,10 @@ export function TokenCreationForm() {
                           checked={value as boolean}
                           onCheckedChange={(checked: CheckedState) => {
                             onChange(checked === true)
+                            // Reset maxTxAmount when maxTx is disabled
+                            if (checked !== true) {
+                              form.setValue('maxTxAmount', 0)
+                            }
                           }}
                           className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           isUpdated={updatedFields.has("maxTx")}
@@ -610,6 +672,10 @@ export function TokenCreationForm() {
                           checked={value as boolean}
                           onCheckedChange={(checked: CheckedState) => {
                             onChange(checked === true)
+                            // Reset cooldownTime when antiBot is disabled
+                            if (checked !== true) {
+                              form.setValue('cooldownTime', 0)
+                            }
                           }}
                           className="border-white/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
                           isUpdated={updatedFields.has("antiBot")}
@@ -620,27 +686,30 @@ export function TokenCreationForm() {
                     </FormItem>
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name="cooldownTime"
-                  render={({ field: { value, onChange, ...field } }) => (
-                    <FormItem>
-                      <FormLabel className="text-white">Cooldown Time (seconds)</FormLabel>
-                      <FormControl>
-                        <AnimatedFormInput
-                          type="number"
-                          value={value.toString()}
-                          onChange={(e) => onChange(Number(e.target.value))}
-                          className="bg-white/5 border-white/10 text-white placeholder:text-white/30
-                            focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300"
-                          isUpdated={updatedFields.has("cooldownTime")}
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage className="text-red-400" />
-                    </FormItem>
-                  )}
-                />
+                {form.watch("antiBot") && (
+                  <FormField
+                    control={form.control}
+                    name="cooldownTime"
+                    render={({ field: { value, onChange, ...field } }) => (
+                      <FormItem>
+                        <FormLabel className="text-white">Cooldown Time (seconds)</FormLabel>
+                        <FormControl>
+                          <AnimatedFormInput
+                            type="number"
+                            placeholder="60"
+                            value={value.toString()}
+                            onChange={(e) => onChange(Number(e.target.value))}
+                            className="bg-white/5 border-white/10 text-white placeholder:text-white/30
+                              focus:border-primary focus:ring-1 focus:ring-primary/50 transition-all duration-300"
+                            isUpdated={updatedFields.has("cooldownTime")}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage className="text-red-400" />
+                      </FormItem>
+                    )}
+                  />
+                )}
               </AccordionContent>
             </AccordionItem>
           </Accordion>
@@ -652,7 +721,9 @@ export function TokenCreationForm() {
                 transition-all duration-300 hover:shadow-[0_0_20px_rgba(124,58,237,0.3)]
                 relative overflow-hidden group"
             >
-              <span className="relative z-10">Create Token</span>
+              <span className="relative z-10">
+                Create Token {priceDisplay && `(${priceDisplay})`}
+              </span>
               <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 
                 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
             </Button>

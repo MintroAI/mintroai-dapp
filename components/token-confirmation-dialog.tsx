@@ -12,7 +12,7 @@ interface TokenConfirmationDialogProps {
   onConfirm: () => void
   onCancel: () => void
   formData: TokenFormValues
-  deploymentStatus: 'idle' | 'creating' | 'compiling' | 'deploying' | 'success' | 'error'
+  deploymentStatus: 'idle' | 'creating' | 'compiling' | 'pricing' | 'deploying' | 'success' | 'error'
 }
 
 function StatusBadge({ enabled }: { enabled: boolean }) {
@@ -57,6 +57,13 @@ export function TokenConfirmationDialog({
           <div className="flex items-center justify-center gap-2 w-full">
             <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
             <span className="text-sm">Compiling...</span>
+          </div>
+        )
+      case 'pricing':
+        return (
+          <div className="flex items-center justify-center gap-2 w-full">
+            <div className="w-4 h-4 border-2 border-white/20 border-t-white rounded-full animate-spin" />
+            <span className="text-sm">Calculating Price...</span>
           </div>
         )
       case 'deploying':
