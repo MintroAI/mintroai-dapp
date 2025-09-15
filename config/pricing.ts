@@ -13,7 +13,7 @@ export const PRICING_CONFIG = {
     }
   },
   vesting: {
-    base: 19.99 // Fixed price for vesting contract
+    base: 99.99 // Fixed price for vesting contract
   }
 };
 
