@@ -5,10 +5,13 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Bot, Send, User } from "lucide-react"
+import { Bot, Send, User, AlertCircle } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import { useSession } from "@/hooks/useSession"
 import { useWebSocket } from "@/hooks/useWebSocket"
+import { useGuestMode } from "@/hooks/useGuestMode"
+import { useWallet } from "@/hooks/useWallet"
+import { Badge } from "@/components/ui/badge"
 
 // Random ID oluşturmak için basit bir fonksiyon
 function generateId() {
@@ -37,10 +40,15 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
   ])
   // const [input, setInput] = useState("") // Remove internal state
   const [isTyping, setIsTyping] = useState(false)
+  const [showWalletPrompt, setShowWalletPrompt] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Session yönetimi
   const { sessionId, isInitialized } = useSession()
+  
+  // Guest mode management
+  const guestMode = useGuestMode(creationType as 'token' | 'vesting' | 'general')
+  const { wallet } = useWallet()
 
   // WebSocket bağlantısı
   useWebSocket(sessionId, isInitialized, (config) => {
@@ -67,6 +75,12 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
 
   const sendMessage = async (message: string) => {
     if (!message.trim()) return
+    
+    // Check guest mode limits
+    if (!guestMode.canSendMessage) {
+      setShowWalletPrompt(true)
+      return
+    }
 
     try {
       // Kullanıcı mesajını ekle
@@ -77,6 +91,11 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
       }])
       setInputValue("")
       setIsTyping(true)
+      
+      // Increment guest message counter if not authenticated
+      if (!wallet.isConnected) {
+        guestMode.incrementMessageCount()
+      }
 
       const maxRetries = 3
       let retryCount = 0
@@ -192,19 +211,116 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t border-white/10">
+      <div className="p-4 border-t border-white/10 space-y-2">
+        {/* Guest mode counter */}
+        {guestMode.shouldShowCounter && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex items-center justify-between px-2"
+          >
+            <div className="flex items-center gap-2">
+              {guestMode.remainingMessages <= 1 && (
+                <AlertCircle className="w-4 h-4 text-yellow-500" />
+              )}
+              <span className={`text-sm ${
+                guestMode.remainingMessages <= 1 
+                  ? 'text-yellow-500 font-medium' 
+                  : 'text-white/60'
+              }`}>
+                {guestMode.getCounterText()}
+              </span>
+            </div>
+            {guestMode.remainingMessages === 0 && (
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={() => setShowWalletPrompt(true)}
+                className="text-xs"
+              >
+                Connect Wallet
+              </Button>
+            )}
+          </motion.div>
+        )}
+
+        {/* Chat input */}
         <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 bg-white/5 border-white/10 text-white/90 placeholder:text-white/50"
-          />
-          <Button type="submit" size="icon" className="bg-primary hover:bg-primary/90 text-white">
+          <div className="flex-1 relative">
+            <Input
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={guestMode.isLimitReached ? "Connect wallet to continue..." : "Type your message..."}
+              disabled={guestMode.isLimitReached}
+              className="flex-1 bg-white/5 border-white/10 text-white/90 placeholder:text-white/50 disabled:opacity-50 disabled:cursor-not-allowed pr-20"
+            />
+            {guestMode.shouldShowCounter && guestMode.remainingMessages > 0 && (
+              <Badge 
+                variant="secondary" 
+                className="absolute right-2 top-1/2 -translate-y-1/2 text-xs bg-white/10 text-white/70"
+              >
+                {guestMode.remainingMessages}/{3}
+              </Badge>
+            )}
+          </div>
+          <Button 
+            type="submit" 
+            size="icon" 
+            disabled={guestMode.isLimitReached}
+            className="bg-primary hover:bg-primary/90 text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          >
             <Send className="w-4 h-4" />
           </Button>
         </form>
       </div>
+      
+      {/* Wallet Connection Modal for Guest Limit */}
+      {showWalletPrompt && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-gray-900 border border-gray-700 rounded-xl p-6 max-w-md w-full"
+          >
+            <div className="text-center space-y-4">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                <AlertCircle className="w-8 h-8 text-primary" />
+              </div>
+              
+              <h3 className="text-xl font-semibold text-white">
+                You&apos;ve reached the free message limit
+              </h3>
+              
+              <p className="text-white/70 text-sm">
+                Connect your wallet to continue using the AI assistant with unlimited messages.
+              </p>
+              
+              <div className="flex gap-3 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowWalletPrompt(false)}
+                  className="flex-1"
+                >
+                  Maybe Later
+                </Button>
+                <Button
+                  onClick={() => {
+                    setShowWalletPrompt(false)
+                    // Trigger wallet connection
+                    const connectButton = document.querySelector('[data-wallet-connect]') as HTMLButtonElement
+                    if (connectButton) {
+                      connectButton.click()
+                    }
+                  }}
+                  className="flex-1 bg-primary hover:bg-primary/90"
+                >
+                  Connect Wallet
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   )
 }
