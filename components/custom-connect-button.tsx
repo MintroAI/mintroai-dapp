@@ -205,6 +205,7 @@ export function CustomConnectButton() {
         }}
         variant="outline"
         className="gap-2 border-primary/50 hover:bg-primary/10 hover:border-primary transition-all duration-300"
+        data-wallet-connect
       >
         <Wallet className="w-4 h-4" />
         Connect Wallet
