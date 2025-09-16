@@ -15,6 +15,10 @@ export interface TokenDeploymentPayload {
     decimals: number;
     owner_address: string;
   };
+  paymentAmount?: bigint;
+  deadline?: bigint;
+  nonce?: bigint;
+  signature?: string;
 }
 
 // Chain Signatures configuration for multichain-tools

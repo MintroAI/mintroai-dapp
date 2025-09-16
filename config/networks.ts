@@ -1,4 +1,4 @@
-import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bsc, bscTestnet, auroraTestnet } from 'viem/chains'
+import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bsc, bscTestnet, auroraTestnet, theta, thetaTestnet } from 'viem/chains'
 import { type Chain } from 'viem'
 import { hyperEVM } from './customChains'
 import { parseUnits } from 'ethers'
@@ -29,7 +29,7 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
   // Arbitrum
   [arbitrum.id]: {
     chain: arbitrum,
-    factoryAddress: "0xB4f2946245D4009B48980C8De88fb84dEF336DD0" as `0x${string}`, // Arbitrum factory address
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Arbitrum factory address
   },
   // Base
   // [base.id]: {
@@ -56,12 +56,12 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
   // HyperEVM
   [hyperEVM.id]: {
     chain: hyperEVM,
-    factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // HyperEVM factory address
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // HyperEVM factory address
   },
   // BSC Testnet
   [bscTestnet.id]: {
     chain: bscTestnet,
-    factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // BSC Testnet factory address
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // BSC Testnet factory address
     chainSignaturesGasPrice: parseUnits('1', 'gwei'),
     chainSignaturesGasLimit: 2000000, // 2M Gas
     chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
@@ -79,9 +79,25 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
       },
       iconUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/14803.png',
     } as Chain,
-    factoryAddress: "0x7628d1fcf63BFCdB9d705fdB39B0C20de9B3f22E" as `0x${string}`, // Aurora Testnet factory address
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Aurora Testnet factory address
     chainSignaturesGasPrice: parseUnits('0.07', 'gwei'),
     chainSignaturesGasLimit: 2000000, // 2M Gas
     chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
+  },
+  // Theta Mainnet
+  [theta.id]: {
+    chain: {
+      ...theta,
+      iconUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2416.png',
+    } as Chain,
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Theta Mainnet factory address
+  },
+  // Theta Testnet
+  [thetaTestnet.id]: {
+    chain: {
+      ...thetaTestnet,
+      iconUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2416.png',
+    } as Chain,
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Theta Testnet factory address
   }
 } 

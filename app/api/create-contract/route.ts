@@ -10,6 +10,8 @@ interface TokenContractData {
   decimals: number;
   initialSupply: string;
   ownerAddress: string;
+  chainId: string;
+  isChainSignatures: boolean;
   mintable: boolean;
   burnable: boolean;
   pausable: boolean;

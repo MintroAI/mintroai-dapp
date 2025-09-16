@@ -19,9 +19,10 @@ import { cn } from "@/lib/utils"
 import { VestingConfirmationDialog } from "./vesting-confirmation-dialog"
 import { VestingSuccessDialog } from "./vesting-success-dialog"
 import { useSession } from "@/hooks/useSession"
-import { useAccount } from 'wagmi'
+import { useAccount, useChainId } from 'wagmi'
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { useWebSocket } from "@/hooks/useWebSocket"
+import { useVestingPricing } from '@/hooks/usePricing'
 
 const vestingFormSchema = z.object({
   projectName: z.string().min(1, "Project name is required"),
@@ -47,11 +48,12 @@ export type VestingFormValues = z.infer<typeof vestingFormSchema>
 export function VestingCreationForm() {
   const { sessionId, isInitialized } = useSession()
   const { address } = useAccount()
+  const chainId = useChainId()
   const { deploy, isPending, isWaiting, isSuccess, error, hash, receipt } = useTokenDeploy()
   
   const [showConfirmation, setShowConfirmation] = React.useState(false)
   const [showSuccess, setShowSuccess] = React.useState(false)
-  const [deploymentStatus, setDeploymentStatus] = React.useState<'idle' | 'creating' | 'compiling' | 'deploying' | 'success' | 'error'>('idle')
+  const [deploymentStatus, setDeploymentStatus] = React.useState<'idle' | 'creating' | 'compiling' | 'pricing' | 'deploying' | 'success' | 'error'>('idle')
   const [formData, setFormData] = React.useState<VestingFormValues | null>(null)
   const [deployedAddress, setDeployedAddress] = React.useState<string>('')
   const [updatedFields, setUpdatedFields] = React.useState<Set<string>>(new Set())
@@ -76,6 +78,9 @@ export function VestingCreationForm() {
     control: form.control,
     name: "vestingUsers"
   })
+
+  // Calculate price for vesting contract
+  const { displayText: priceDisplay } = useVestingPricing()
 
   const addVestingUser = () => {
     append({ address: "", amount: "" })
@@ -276,6 +281,7 @@ export function VestingCreationForm() {
         vestingSupply: parseInt(formData.totalVestingAmount),
         decimals: formData.tokenDecimals,
         ownerAddress: address, // Add owner address for vesting contract
+        chainId: chainId.toString(), // Add chain ID for pricing
         users,
         amts,
       };
@@ -315,8 +321,39 @@ export function VestingCreationForm() {
       const compileData = await compileResponse.json();
       console.log('Vesting contract compiled:', compileData);
 
-      // 3. Deploy contract
-      const deployResponse = await deploy(compileData.bytecode);
+      // 3. Price and Signature Service
+      setDeploymentStatus('pricing')
+      const priceAndSignatureResponse = await fetch('/api/price-and-signature-service', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contractData, bytecode: compileData.bytecode }),
+      });
+
+      if (!priceAndSignatureResponse.ok) {
+        const errorData = await priceAndSignatureResponse.text();
+        console.error('Price and signature service error:', {
+          status: priceAndSignatureResponse.status,
+          statusText: priceAndSignatureResponse.statusText,
+          error: errorData
+        });
+        throw new Error(`Failed to get price and signature: ${errorData}`);
+      }
+
+      const priceAndSignatureData = await priceAndSignatureResponse.json();
+      console.log('Price and signature data:', priceAndSignatureData);
+
+      // 4. Deploy contract with payment
+      setDeploymentStatus('deploying')
+      const deployResponse = await deploy(
+        compileData.bytecode,
+        null,  // No config for vesting contracts
+        priceAndSignatureData.data.txValue,
+        priceAndSignatureData.data.deploymentData.deadline,
+        priceAndSignatureData.data.deploymentData.nonce,
+        priceAndSignatureData.data.signature
+      );
       console.log('Vesting contract deployed:', deployResponse);
 
 
@@ -790,7 +827,7 @@ export function VestingCreationForm() {
                   relative overflow-hidden group"
               >
                 <span className="relative z-10 flex items-center gap-2">
-                  Create Vesting Contract
+                  Create Vesting Contract {priceDisplay && `(${priceDisplay})`}
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 
                   translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
