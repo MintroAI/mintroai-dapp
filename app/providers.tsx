@@ -13,6 +13,7 @@ import { SUPPORTED_NETWORKS } from '@/config/networks'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { NearWalletProvider } from '@/contexts/NearWalletContext'
 import { WalletProvider } from '@/contexts/WalletContext'
+import { AuthProvider } from '@/contexts/AuthContext'
 
 if (!process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID) {
   throw new Error('You need to provide NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID env variable')
@@ -41,7 +42,9 @@ export function Providers({ children }: { children: React.ReactNode }) {
         <RainbowKitProvider theme={darkTheme()} modalSize="compact">
           <NearWalletProvider>
             <WalletProvider>
-              {mounted && children}
+              <AuthProvider>
+                {mounted && children}
+              </AuthProvider>
             </WalletProvider>
           </NearWalletProvider>
         </RainbowKitProvider>

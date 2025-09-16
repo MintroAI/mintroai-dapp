@@ -12,16 +12,19 @@ import { Separator } from "@/components/ui/separator"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { motion } from "framer-motion"
 import { type CheckedState } from "@radix-ui/react-checkbox"
-import { Coins, Shield, Gauge, Percent, Sparkles } from "lucide-react"
+import { Coins, Shield, Gauge, Percent, Sparkles, AlertCircle } from "lucide-react"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { useSession } from "@/hooks/useSession"
 import { useAccount } from 'wagmi'
 import { useNearWallet } from '@/contexts/NearWalletContext'
+import { useAuth } from '@/contexts/AuthContext'
 import { EVM } from 'multichain-tools'
 import { MPC_CONTRACT, NEAR_NETWORK_ID, DEFAULT_DERIVATION_PATH } from '@/config/chain-signatures'
 import { TokenConfirmationDialog } from "@/components/token-confirmation-dialog"
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { TokenSuccessDialog } from "@/components/token-success-dialog"
+import { AuthenticationModal } from "@/components/authentication-modal"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 
 const tokenFormSchema = z.object({
   name: z.string().min(1, "Token name is required"),
@@ -78,6 +81,10 @@ export function TokenCreationForm() {
   const { sessionId, isInitialized } = useSession()
   const { address } = useAccount()
   const { accountId, selector } = useNearWallet()
+  const { isAuthenticated } = useAuth()
+  const [showAuthModal, setShowAuthModal] = React.useState(false)
+  const [walletError, setWalletError] = React.useState<string | null>(null)
+  
   const form = useForm<TokenFormValues>({
     resolver: zodResolver(tokenFormSchema),
     defaultValues: {
@@ -196,15 +203,33 @@ export function TokenCreationForm() {
     }
   }, [isPending, isWaiting, isSuccess, error, hash, receipt])
 
+  // Clear wallet error when wallet connects
+  React.useEffect(() => {
+    if (address || accountId) {
+      setWalletError(null);
+    }
+  }, [address, accountId])
+
   const onSubmit = async () => {
+    // Clear any previous errors
+    setWalletError(null);
     
-    // Check if either EVM wallet or NEAR wallet is connected
+    // First check wallet connection
     if (!address && !accountId) {
-      console.error('Please connect your wallet first');
+      setWalletError('Please connect your wallet first to create a token');
+      // Scroll to top to show the error
+      window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     
-    // Instead of sending the request immediately, show the confirmation dialog
+    // Then check authentication
+    if (!isAuthenticated) {
+      // Show authentication modal
+      setShowAuthModal(true);
+      return;
+    }
+    
+    // All checks passed, show confirmation dialog
     setShowConfirmation(true);
   }
   
@@ -327,6 +352,14 @@ export function TokenCreationForm() {
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="p-6 space-y-8">
+          {/* Wallet Connection Alert */}
+          {walletError && (
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{walletError}</AlertDescription>
+            </Alert>
+          )}
+          
           <div className="space-y-6">
             <div className="flex items-center">
               <div className="flex items-center gap-3">
@@ -686,6 +719,18 @@ export function TokenCreationForm() {
           targetChainId={form.getValues().targetChain}
         />
       )}
+      
+      <AuthenticationModal
+        open={showAuthModal}
+        onClose={() => setShowAuthModal(false)}
+        onSuccess={() => {
+          setShowAuthModal(false)
+          // After successful auth, re-submit the form
+          // Form validation will pass and it will go directly to confirmation
+          form.handleSubmit(onSubmit)();
+        }}
+        trigger="manual"
+      />
     </>
   )
 }

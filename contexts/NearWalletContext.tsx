@@ -64,6 +64,14 @@ export function NearWalletProvider({ children }: NearWalletProviderProps) {
 
         setSelector(walletSelector)
         setModal(walletModal)
+        
+        // Expose selector globally for authentication
+        if (typeof window !== 'undefined') {
+          interface GlobalWindow extends Window {
+            nearWalletSelector?: { selector: WalletSelector }
+          }
+          (window as GlobalWindow).nearWalletSelector = { selector: walletSelector }
+        }
 
         // Subscribe to wallet state changes
         const subscription = walletSelector.store.observable.subscribe(
