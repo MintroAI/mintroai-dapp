@@ -11,6 +11,7 @@ import { useSession } from "@/hooks/useSession"
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { useGuestMode } from "@/hooks/useGuestMode"
 import { useWallet } from "@/hooks/useWallet"
+import { useAuth } from "@/contexts/AuthContext"
 import { Badge } from "@/components/ui/badge"
 
 // Random ID oluşturmak için basit bir fonksiyon
@@ -49,6 +50,7 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
   // Guest mode management
   const guestMode = useGuestMode(creationType as 'token' | 'vesting' | 'general')
   const { wallet } = useWallet()
+  const { authToken } = useAuth()
 
   // WebSocket bağlantısı
   useWebSocket(sessionId, isInitialized, (config) => {
@@ -103,11 +105,19 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
 
       while (retryCount < maxRetries && !success) {
         try {
+          // Prepare headers with optional JWT token
+          const headers: HeadersInit = {
+            'Content-Type': 'application/json',
+          }
+          
+          // Add JWT token if user is authenticated
+          if (authToken) {
+            headers['Authorization'] = `Bearer ${authToken}`
+          }
+
           const response = await fetch('/api/chat', {
             method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
+            headers,
             body: JSON.stringify({
               sessionId,
               chatInput: message,
@@ -115,12 +125,54 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
             }),
           })
 
+          const data = await response.json()
+
+          // Handle rate limit exceeded
+          if (response.status === 429) {
+            const resetTime = data.rateLimitInfo?.resetTime 
+              ? new Date(data.rateLimitInfo.resetTime).toLocaleTimeString() 
+              : 'later'
+            setMessages(prev => [
+              ...prev,
+              { 
+                id: generateId(),
+                role: 'assistant', 
+                content: `⚠️ Rate limit exceeded. You can send more messages after ${resetTime}. ${data.message || ''}` 
+              }
+            ])
+            success = true
+            break
+          }
+
+          // Handle authentication required
+          if (response.status === 401) {
+            setMessages(prev => [
+              ...prev,
+              { 
+                id: generateId(),
+                role: 'assistant', 
+                content: `🔒 ${data.message || 'Please connect your wallet to continue.'}` 
+              }
+            ])
+            setShowWalletPrompt(true)
+            success = true
+            break
+          }
+
           if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`)
           }
 
-          const data = await response.json()
           success = true
+
+          // Store rate limit info if available and sync with guest mode
+          if (data.rateLimitInfo && !wallet.isConnected) {
+            const { remaining, limit } = data.rateLimitInfo
+            console.log(`Backend rate limit: ${remaining}/${limit} messages remaining`)
+            
+            // Sync frontend guest mode with backend rate limit
+            guestMode.syncWithBackend(remaining, limit)
+          }
 
           setMessages(prev => [
             ...prev,
