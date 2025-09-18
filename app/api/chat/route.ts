@@ -1,107 +1,156 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-if (!process.env.NEXT_PUBLIC_CHAT_URL) {
-  throw new Error('NEXT_PUBLIC_CHAT_URL is not defined in environment variables')
-}
-if (!process.env.NEXT_PUBLIC_CHAT_URL_GENERAL) {
-  throw new Error('NEXT_PUBLIC_CHAT_URL_GENERAL is not defined in environment variables')
-}
-if (!process.env.NEXT_PUBLIC_CHAT_URL_VESTING) {
-  throw new Error('NEXT_PUBLIC_CHAT_URL_VESTING is not defined in environment variables')
-}
-
-const CHAT_URL = process.env.NEXT_PUBLIC_CHAT_URL
-const CHAT_URL_GENERAL = process.env.NEXT_PUBLIC_CHAT_URL_GENERAL
-const CHAT_URL_VESTING = process.env.NEXT_PUBLIC_CHAT_URL_VESTING
+// Backend URL configuration
+const BACKEND_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
-
-export const maxDuration = 80 // Maximum duration as seconds
+export const maxDuration = 80 // Maximum duration in seconds
 
 export async function POST(req: NextRequest) {
-    try {
+  try {
     const { sessionId, chatInput, mode } = await req.json()
 
-    // Mode'a göre timeout süresini belirle
-    const timeoutDuration = mode === 'general' ? 75000 : 25000 // 75 saniye vs 25 saniye
+    // Validate required fields
+    if (!sessionId || !chatInput || !mode) {
+      return NextResponse.json(
+        { error: 'Missing required fields: sessionId, chatInput, or mode' },
+        { status: 400 }
+      )
+    }
 
-    // Timeout kontrolü için Promise.race kullanımı
+    // Validate mode
+    if (!['general', 'token', 'vesting'].includes(mode)) {
+      return NextResponse.json(
+        { error: 'Invalid mode. Must be: general, token, or vesting' },
+        { status: 400 }
+      )
+    }
+
+    // Validate chat input length
+    if (chatInput.length < 1 || chatInput.length > 2000) {
+      return NextResponse.json(
+        { error: 'Chat input must be between 1 and 2000 characters' },
+        { status: 400 }
+      )
+    }
+
+    // Get JWT token from Authorization header if present
+    const authHeader = req.headers.get('authorization')
+    
+    // Prepare headers for backend request
+    const headers: HeadersInit = {
+      'Content-Type': 'application/json',
+    }
+
+    // Add JWT token if available
+    if (authHeader) {
+      headers['Authorization'] = authHeader
+    }
+
+    // Set timeout based on mode (backend already handles this, but we keep client-side timeout too)
+    const timeoutDuration = mode === 'general' ? 75000 : 25000 // 75 seconds vs 25 seconds
+
+    // Create timeout promise
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => reject(new Error('Request timeout')), timeoutDuration)
     })
 
-    let fetchPromise: Promise<Response>
-    if (mode === 'general') {
-      fetchPromise = fetch(`${CHAT_URL_GENERAL}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          sessionId,
-          chatInput,
-          mode
-        }),
-      })
-    } else if (mode === 'token') {
-      // Token Creation için mevcut endpoint ve body
-      fetchPromise = fetch(`${CHAT_URL}/${sessionId}`, {
+    // Make request to backend proxy
+    const fetchPromise = fetch(`${BACKEND_URL}/api/v1/chat/`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers,
       body: JSON.stringify({
         sessionId,
-        action: 'sendMessage',
         chatInput,
+        mode
       }),
     })
-    } else if (mode === 'vesting') {
-      fetchPromise = fetch(`${CHAT_URL_VESTING}/${sessionId}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
+
+    // Race between request and timeout
+    const response = await Promise.race([fetchPromise, timeoutPromise]) as Response
+
+    // Parse response
+    const data = await response.json()
+
+    // Handle rate limit response
+    if (response.status === 429) {
+      return NextResponse.json(
+        {
+          error: 'Rate limit exceeded',
+          message: data.message || 'You have exceeded your chat limit. Please try again later.',
+          rateLimitInfo: data.rateLimitInfo
         },
-        body: JSON.stringify({
-          sessionId,
-          action: 'sendMessage',
-          chatInput,
-        }),
-      })
-    } else {
-      throw new Error('Invalid mode');
+        { status: 429 }
+      )
     }
 
-    const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
-    let data;
-    const contentType = response.headers.get('content-type');
-    if (contentType && contentType.includes('application/json')) {
-      data = await response.json();
-    } else {
-      const text = await response.text();
-      try {
-        data = JSON.parse(text);
-      } catch {
-        data = { error: 'Invalid response from ChainGPT', raw: text };
-      }
+    // Handle authentication errors
+    if (response.status === 401) {
+      return NextResponse.json(
+        {
+          error: 'Authentication required',
+          message: data.message || 'Please login to continue.'
+        },
+        { status: 401 }
+      )
     }
 
-    return NextResponse.json(data)
+    // Handle other error responses
+    if (!response.ok) {
+      console.error('Backend proxy error:', data)
+      return NextResponse.json(
+        {
+          error: data.error || 'Backend error',
+          message: data.message || 'An error occurred while processing your request.'
+        },
+        { status: response.status }
+      )
+    }
+
+    // Transform backend response to match frontend expectations
+    // Backend returns 'response' field, but frontend expects 'output' or 'message'
+    const transformedData = {
+      ...data,
+      output: data.response || data.output || data.message,
+      message: data.response || data.message || data.output,
+    }
+
+    // Return successful response
+    return NextResponse.json(transformedData)
+
   } catch (error) {
-    console.error('Chat error:', error)
+    console.error('Chat proxy error:', error)
     
-
+    // Handle timeout error
     if (error instanceof Error && error.message === 'Request timeout') {
       return NextResponse.json(
-        { error: 'The request took too long to process. Please try again.' },
+        { 
+          error: 'Request timeout',
+          message: 'The request took too long to process. Please try again.' 
+        },
         { status: 408 }
       )
     }
 
+    // Handle network errors
+    if (error instanceof Error && error.message.includes('fetch')) {
+      return NextResponse.json(
+        { 
+          error: 'Network error',
+          message: 'Could not connect to the chat service. Please check your connection and try again.' 
+        },
+        { status: 503 }
+      )
+    }
+
+    // Generic error response
     return NextResponse.json(
-      { error: 'An error occurred while processing your request. Please try again.' },
+      { 
+        error: 'Internal server error',
+        message: 'An unexpected error occurred. Please try again.' 
+      },
       { status: 500 }
     )
   }
-} 
+}
