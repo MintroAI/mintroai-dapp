@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNearWallet } from '@/contexts/NearWalletContext';
-import { EVM, ChainSignaturesContract } from 'multichain-tools';
-import { KeyPair, connect, keyStores } from 'near-api-js';
+import { useAuthentication } from '@/hooks/useAuthentication';
+import { EVM } from 'multichain-tools';
 
 import { SUPPORTED_NETWORKS } from '@/config/networks';
 import { FACTORY_ABI } from '@/config/factory-abi';
@@ -14,12 +14,17 @@ import {
 
 export function useChainSignatures() {
   const { selector, accountId } = useNearWallet();
+  const { authToken, isAuthenticated } = useAuthentication();
   const [loading, setLoading] = useState(false);
 
   // Deploy token using Chain Signatures with multichain-tools
   const deployToken = async (payload: TokenDeploymentPayload, derivationPath: string = DEFAULT_DERIVATION_PATH) => {
     if (!selector || !accountId) {
       throw new Error('Wallet not connected');
+    }
+
+    if (!isAuthenticated || !authToken) {
+      throw new Error('User not authenticated. Please authenticate first.');
     }
 
     setLoading(true);
@@ -44,44 +49,60 @@ export function useChainSignatures() {
         derivationPath
       );
 
-      const { ethers: ethersLib } = await import('ethers');
-      const providerFunding = new ethersLib.JsonRpcProvider(networkConfig.chain.rpcUrls.default.http[0]);
+      // Note: Provider is no longer needed here as funding is handled by backend
 
       // Request funding from backend (secure approach)
       console.log('🔐 Requesting secure funding from backend for:', senderAddress);
       
       try {
-        // Call backend funding API
-        const backendUrl = process.env.NEXT_PUBLIC_WEBSOCKET_URL || 'http://localhost:3005';
-        const fundingResponse = await fetch(`${backendUrl}/api/fund-address`, {
+        // Use proper FastAPI backend URL
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const fundingResponse = await fetch(`${backendUrl}/api/v1/fund-address`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': `Bearer ${authToken}`,
           },
           body: JSON.stringify({
             address: senderAddress,
-            chainId: chainId.toString(),
+            chain_id: chainId.toString(),  // Backend snake_case beklediği için
           }),
         });
 
         const fundingResult = await fundingResponse.json();
         
         if (!fundingResponse.ok) {
-          console.error('❌ Funding failed:', fundingResult.error);
-          // Continue anyway - user might have manual funds
-          console.log('⚠️ Continuing without funding - make sure address has funds');
+          // Handle different error types
+          if (fundingResponse.status === 401) {
+            throw new Error('Authentication failed. Please re-authenticate and try again.');
+          } else if (fundingResponse.status === 429) {
+            throw new Error('Rate limit exceeded. Please try again later.');
+          } else if (fundingResponse.status === 400) {
+            console.error('❌ Funding validation failed:', fundingResult.error);
+            console.log('⚠️ Continuing without funding - make sure address has funds');
+          } else {
+            console.error('❌ Funding failed:', fundingResult.error);
+            console.log('⚠️ Continuing without funding - make sure address has funds');
+          }
         } else {
           console.log('✅ Funding successful:', fundingResult);
           
-          // Wait a bit for transaction to be confirmed
-          if (fundingResult.funded) {
-            await new Promise(resolve => setTimeout(resolve, 3000));
+          // Wait for transaction confirmation if funded
+          if (fundingResult.funded && fundingResult.transactionHash) {
+            console.log('⏳ Waiting for funding transaction confirmation:', fundingResult.transactionHash);
+            await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds for confirmation
           }
         }
       } catch (fundingError) {
         console.error('❌ Funding service error:', fundingError);
+        
+        // Re-throw authentication errors
+        if (fundingError instanceof Error && fundingError.message.includes('Authentication failed')) {
+          throw fundingError;
+        }
+        
         console.log('⚠️ Backend funding service unavailable - please fund manually');
-        // Continue anyway - user might have manual funds
+        // Continue anyway - user might have manual funds for other errors
       }
 
       let formattedBytecode = payload.bytecode;
@@ -109,20 +130,14 @@ export function useChainSignatures() {
 
 
       // Prepare transaction request
-      const transactionRequest: any = {
+      const transactionRequest = {
         to: networkConfig.factoryAddress,
         data: data,
         from: senderAddress,
-      };
-
-      Object.assign(transactionRequest, {
         maxFeePerGas: networkConfig.chainSignaturesGasPrice,
         maxPriorityFeePerGas: networkConfig.chainSignaturesGasPrice,
         gasLimit: networkConfig.chainSignaturesGasLimit,
-      });
-      // ensure legacy gasPrice/type removed
-      delete transactionRequest.gasPrice;
-      delete transactionRequest.type;
+      };
 
 
       // Get the MPC payload and transaction
@@ -131,8 +146,9 @@ export function useChainSignatures() {
       transaction.maxFeePerGas = networkConfig.chainSignaturesGasPrice;
       transaction.maxPriorityFeePerGas = networkConfig.chainSignaturesGasPrice;
       transaction.gasLimit = networkConfig.chainSignaturesGasLimit;
-      delete transaction.gasPrice;
-      delete transaction.type;
+      // Remove legacy properties if they exist
+      if ('gasPrice' in transaction) delete (transaction as Record<string, unknown>).gasPrice;
+      if ('type' in transaction) delete (transaction as Record<string, unknown>).type;
 
 
       // Get the wallet for signing
@@ -171,7 +187,7 @@ export function useChainSignatures() {
       }
 
       // Parse signature from transaction outcome
-      const successValue = (signResult.status as any)?.SuccessValue;
+      const successValue = (signResult.status as { SuccessValue?: string })?.SuccessValue;
       if (!successValue) {
         throw new Error('No signature returned from MPC contract');
       }
