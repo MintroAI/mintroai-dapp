@@ -1,379 +1,309 @@
-# 🚀 MintroAI - AI-Powered Smart Contract Creation Platform
+# MintroAI - AI-Powered Smart Contract Platform
 
-<div align="center">
+An **AI-powered smart contract creation and deployment platform** built on **BNB Smart Chain (BSC)** and **NEAR Protocol**, compatible with multiple EVM networks. Create, deploy, and manage smart contracts with natural language AI assistance and revolutionary cross-chain capabilities through NEAR Chain Signatures.
 
-![MintroAI Logo](public/assets/logo-small.svg)
+## Technology Stack
 
-**Create, Deploy, and Manage Smart Contracts with AI Assistance**
+- **Blockchain**: BNB Smart Chain + EVM-compatible chains + NEAR Protocol
+- **Smart Contracts**: Solidity ^0.8.17, OpenZeppelin libraries
+- **Frontend**: Next.js 14 + wagmi + RainbowKit + ethers.js
+- **Development**: Hardhat, OpenZeppelin Upgradeable contracts
+- **AI Integration**: Custom AI APIs for smart contract generation
+- **Cross-Chain**: NEAR Chain Signatures for multi-chain deployment
 
-[![Next.js](https://img.shields.io/badge/Next.js-14.2.16-black?style=for-the-badge&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue?style=for-the-badge&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.4.1-38B2AC?style=for-the-badge&logo=tailwind-css)](https://tailwindcss.com/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+## Supported Networks
 
-[🌐 Live Demo](https://mintro.ai) • [📚 Documentation](#documentation) • [🐛 Report Bug](https://github.com/mintro-ai/saas-dapp/issues) • [✨ Request Feature](https://github.com/mintro-ai/saas-dapp/issues)
+### Primary Networks
+- **BNB Smart Chain Mainnet** (Chain ID: 56) - Primary EVM Network
+- **BNB Smart Chain Testnet** (Chain ID: 97) - BSC Testing Network
+- **NEAR Protocol Mainnet** - Cross-chain deployment via Chain Signatures
+- **NEAR Protocol Testnet** - Testing Chain Signatures
 
-</div>
+### Additional EVM Networks
+- **Arbitrum One** (Chain ID: 42161)
+- **Theta Network** (Chain ID: 361)
+- **Theta Testnet** (Chain ID: 365)
+- **HyperEVM** (Chain ID: 998)
+- **Aurora Testnet** (Chain ID: 1313161555)
 
-## ✨ Features
+### Revolutionary Cross-Chain Support
+- **NEAR Chain Signatures** - Deploy to BSC and any EVM chain from NEAR wallet
+- **No Bridging Required** - Direct deployment through MPC technology
+- **Gas-Free Deployments** - NEAR covers gas fees for Chain Signatures
 
-### 🔗 Multi-Wallet Support
-- **EVM Wallets**: MetaMask, WalletConnect via RainbowKit
-- **NEAR Wallet**: Chain Signatures for cross-chain deployment
-- **Dual Deployment**: Deploy to EVM chains from NEAR wallet
+## Contract Addresses
+
+| Network | Factory Contract | Payment Processor | Token Template |
+|---------|-----------------|-------------------|----------------|
+| **BNB Mainnet** | `0xCe60855D40fa04c18990F94e673c769d91c37737` | Integrated | BEP-20/ERC-20 |
+| **BNB Testnet** | `0xCe60855D40fa04c18990F94e673c769d91c37737` | Integrated | BEP-20/ERC-20 |
+| Arbitrum | `0xCe60855D40fa04c18990F94e673c769d91c37737` | Integrated | ERC-20 |
+| Theta Mainnet | `0xCe60855D40fa04c18990F94e673c769d91c37737` | Integrated | ERC-20 |
+| HyperEVM | `0xCe60855D40fa04c18990F94e673c769d91c37737` | Integrated | ERC-20 |
+| Aurora Testnet | `0xCe60855D40fa04c18990F94e673c769d91c37737` | Integrated | ERC-20 |
+
+## Features
+
+### 🔗 BNB Chain Optimized Features
+- **Low-cost deployments on BSC** - Optimized gas usage for BNB Chain
+- **BSC-native RPC endpoints** - Direct connection to BNB Smart Chain nodes
+- **BNB payment integration** - Native BNB token payment support
+- **Gas-efficient contract design** - Minimized transaction costs on BSC
+- **BSC explorer integration** - Direct links to BSCScan for verification
+- **BEP-20 token standard** - Full compatibility with BSC ecosystem
+
+### 🌐 NEAR Protocol Integration
+- **Chain Signatures Technology** - Revolutionary MPC-based cross-chain deployment
+- **Deploy to BSC from NEAR** - Use NEAR wallet to deploy on BNB Chain
+- **No Gas Fees Required** - NEAR Protocol covers deployment costs
+- **Multi-Chain Access** - One NEAR account, deploy to any EVM chain
+- **Secure MPC Network** - Decentralized signing without private key exposure
+- **Instant Cross-Chain** - No bridges, no wrapping, direct deployment
 
 ### 🤖 AI-Powered Smart Contract Generation
-- **Intelligent Token Creation**: Generate ERC-20 tokens with AI assistance
-- **Interactive Chat Interface**: Natural language smart contract creation
-- **Security Analysis**: Built-in security checks and best practices validation
+- **Natural language contract creation** - Describe your needs in plain English
+- **Interactive chat interface** - Real-time AI assistance for contract customization
+- **Security analysis** - Built-in security checks and best practices validation
+- **Custom contract templates** - Pre-audited templates for common use cases
 
-### 🔧 Advanced Token Features
-- **Mintable & Burnable Tokens**: Dynamic supply management
-- **Pausable Contracts**: Emergency stop functionality  
-- **Anti-Bot Protection**: MEV and bot protection mechanisms
-- **Transfer Tax System**: Configurable transaction fees
-- **Blacklist Management**: Address-based access control
-- **Max Transaction Limits**: Trading volume restrictions
+### 🔗 Multi-Wallet & Cross-Chain Support
+- **EVM Wallets**: MetaMask, WalletConnect, and 100+ wallets via RainbowKit
+- **NEAR Protocol Integration**: Deploy to BSC and other EVM chains from NEAR wallet
+- **Chain Signatures**: Secure cross-chain deployment without bridging
+- **Multi-chain deployment**: Single interface for all supported networks
 
-### 🌐 Multi-Chain Support
-- **Ethereum**: Full EVM compatibility
-- **Arbitrum**: Layer 2 scaling solution
-- **BSC Testnet**: Development and testing
-- **Extensible**: Easy integration of new EVM chains
+### 💎 Advanced Token Features
+- **Mintable & Burnable** - Dynamic supply management
+- **Pausable Contracts** - Emergency stop functionality
+- **Anti-Bot Protection** - MEV and bot protection with cooldown
+- **Transfer Tax System** - Configurable transaction fees
+- **Blacklist Management** - Address-based access control
+- **Max Transaction Limits** - Trading volume restrictions
+- **Vesting Contracts** - Customizable token vesting schedules
 
-### 📊 Real-Time Market Intelligence
-- **Live Price Data**: Real-time cryptocurrency prices and market data
-- **Security Analysis**: Token and address security verification
-- **DeFi Analytics**: Protocol TVL, yields, and performance metrics
-- **Social Sentiment**: KOL mentions and social media trends
-- **Gas Tracker**: Multi-chain gas price monitoring
+### 💰 Dynamic Pricing System
+- **Real-time price calculation** - See costs before deployment
+- **Feature-based pricing** - Pay only for what you use
+- **Free deployments** - On testnets and via Chain Signatures
+- **Signature verification** - Secure payment processing on-chain
 
-### 🔐 Security & Compliance
-- **Audited Templates**: Pre-audited smart contract templates
-- **Security Scanning**: Automated vulnerability detection
-- **Phishing Protection**: URL and address verification
-- **Best Practices**: Industry-standard security implementations
+## BSC Configuration
 
-## 🚀 Quick Start
+### Network Configuration
+```javascript
+// config/networks.ts
+export const SUPPORTED_NETWORKS = {
+  // BNB Smart Chain Mainnet - PRIMARY NETWORK
+  [56]: {
+    chain: bsc,
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737",
+    rpcUrls: {
+      default: 'https://bsc-rpc.publicnode.com/'
+    }
+  },
+  // BNB Smart Chain Testnet
+  [97]: {
+    chain: bscTestnet,
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737",
+    chainSignaturesGasPrice: parseUnits('1', 'gwei'),
+    chainSignaturesGasLimit: 2000000
+  }
+}
+```
+
+### BSC RPC Endpoints
+```env
+# Primary BSC RPC endpoints configured in .env
+BSC_MAINNET_RPC=https://bsc-rpc.publicnode.com/
+BSC_TESTNET_RPC=https://data-seed-prebsc-1-s1.binance.org:8545/
+```
+
+## Quick Start
 
 ### Prerequisites
+- Node.js 18.0+ 
+- npm/yarn/pnpm
+- Docker (optional, for containerized deployment)
+- MetaMask or compatible Web3 wallet
+- BNB tokens for deployment fees (BSC)
 
-- **Docker** (for containerized deployment)
-- **Node.js** 18.0 or higher (for local development)
-- **npm**, **yarn**, **pnpm**, or **bun** (for local development)
-- **MetaMask** or compatible Web3 wallet
-
-### 🐳 Docker Deployment (Recommended)
-
-The easiest way to run the application:
+### Installation
 
 1. **Clone the repository**
-   ```bash
-   git clone https://github.com/truthdeal/mintroai-dapp
-   cd mintroai-dapp
-   ```
-
-2. **Set up environment variables**
-   ```bash
-   cp env.example .env.local
-   ```
-   
-   Edit `.env.local` with your configuration (see environment variables section below).
-
-3. **Build and run with Docker**
-   ```bash
-   # Build the Docker image
-   docker build -t mintroai-dapp .
-   
-   # Run the container
-   docker run -p 3000:3000 --env-file .env.local mintroai-dapp
-   ```
-
-4. **Open your browser**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### 📦 Local Development
-
-For development with hot reload:
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/truthdeal/mintroai-dapp
-   cd mintroai-dapp
-   ```
+```bash
+git clone https://github.com/MintroAI/mintroai-dapp
+cd mintroai-dapp
+```
 
 2. **Install dependencies**
-   ```bash
-   npm install
-   # or
-   yarn install
-   # or
-   pnpm install
-   ```
-
-3. **Set up environment variables**
-   ```bash
-   cp .env.example .env.local
-   ```
-   
-   Configure your environment variables:
-   ```env
-   # Wallet Configuration
-   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID="your_wallet_connect_project_id"
-   
-   # API Endpoints
-   NEXT_PUBLIC_CHAT_URL="your_chat_api_url"
-   NEXT_PUBLIC_CHAT_URL_GENERAL="your_general_chat_api_url"
-   NEXT_PUBLIC_WEBSOCKET_URL="your_websocket_url"
-   NEXT_PUBLIC_CONTRACT_GENERATOR_URL="your_contract_generator_url"
-   
-   # NEAR Chain Signatures Configuration
-   NEXT_PUBLIC_NEAR_NETWORK_ID="testnet"
-   NEXT_PUBLIC_CONTRACT_ID="v1.signer-prod.testnet"
-   
-   # Funding Private Key (⚠️ DEMO ONLY - Use backend in production!)
-   NEXT_PUBLIC_FUNDER_PRIVATE_KEY="your_private_key_for_funding_addresses"
-   ```
-
-4. **Run the development server**
-   ```bash
-   npm run dev
-   # or
-   yarn dev
-   # or
-   pnpm dev
-   ```
-
-5. **Open your browser**
-   
-   Navigate to [http://localhost:3000](http://localhost:3000)
-
-### 🐳 Docker Commands
-
 ```bash
-# Build the image
+npm install
+```
+
+3. **Configure environment**
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local`:
+```env
+# Wallet Configuration
+NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID="your_project_id"
+
+# BSC Configuration 
+NEXT_PUBLIC_DEFAULT_CHAIN_ID="56" # BSC Mainnet
+
+# NEAR Protocol Configuration
+NEXT_PUBLIC_NEAR_NETWORK_ID="testnet"
+NEXT_PUBLIC_CONTRACT_ID="v1.signer-prod.testnet"
+
+# API Endpoints
+NEXT_PUBLIC_SIGNATURE_SERVICE_URL="your_signature_service"
+NEXT_PUBLIC_WEBSOCKET_URL="your_websocket_url"
+NEXT_PUBLIC_CHAT_URL="your_chat_api_url"
+NEXT_PUBLIC_CONTRACT_GENERATOR_URL="your_contract_generator_url"
+```
+
+4. **Run development server**
+```bash
+npm run dev
+```
+
+5. **Open browser**
+Navigate to [http://localhost:3000](http://localhost:3000)
+
+### Docker Deployment
+```bash
+# Build and run with Docker
 docker build -t mintroai-dapp .
-
-# Run the container
-docker run -p 3000:3000 --env-file .env mintroai-dapp
-
-# Run in background (detached mode)
-docker run -d -p 3000:3000 --env-file .env --name mintroai-app mintroai-dapp
-
-# View logs
-docker logs mintroai-app
-
-# Stop the container
-docker stop mintroai-app
-
-# Remove the container
-docker rm mintroai-app
-
-# Remove the image
-docker rmi mintroai-dapp
+docker run -p 3000:3000 --env-file .env.local mintroai-dapp
 ```
 
-### 🔗 NEAR Chain Signatures Setup
+## BSC Deployment Guide
 
-For NEAR wallet users to deploy tokens to EVM chains:
+### Deploying Tokens on BSC
 
-1. **Get a Funding Private Key**
-   - Create a new wallet with some ETH/MATIC for funding derived addresses
-   - Add the private key to `NEXT_PUBLIC_FUNDER_PRIVATE_KEY`
-   - ⚠️ **Security Warning**: In production, use a backend service for funding
+1. **Connect to BSC Network**
+   - Open MetaMask or preferred wallet
+   - Select BNB Smart Chain network
+   - Ensure you have BNB for gas fees
 
-2. **Supported Networks**
-   - **Arbitrum Mainnet** (Chain ID: 42161)
-   - **Arbitrum Sepolia** (Chain ID: 421614) 
-   - **Aurora Testnet** (Chain ID: 1313161555)
+2. **Configure Your Token**
+   - Enter token details (name, symbol, supply)
+   - Select features (see real-time pricing)
+   - Review BSC deployment costs
 
-3. **How it Works**
-   - Connect with NEAR wallet
-   - Select target EVM chain
+3. **Deploy Contract**
+   - Click "Create Token ($X.XX)"
+   - Approve transaction in wallet
+   - Contract deploys to BSC
+   - View on BSCScan via provided link
+
+### BSC-Specific Optimizations
+
+- **Gas Price Optimization**: Automatic gas price adjustment for BSC
+- **BEP-20 Standard**: Full compliance with BSC token standards
+- **PancakeSwap Integration**: Tokens ready for DEX listing
+- **BSC Validator Support**: Compatible with all BSC validators
+
+## NEAR Chain Signatures (Cross-Chain Deployment)
+
+Deploy to BSC and other EVM chains directly from your NEAR wallet:
+
+1. **Connect NEAR Wallet**
+   - Use NEAR wallet selector
+   - No bridging required
+
+2. **Select Target Chain**
+   - Choose BSC or any supported EVM chain
    - System derives EVM address from NEAR account
-   - Funds the derived address automatically
-   - Deploys contract via Chain Signatures MPC
 
-## 🏗️ Tech Stack
+3. **Deploy via MPC**
+   - NEAR's MPC network signs transactions
+   - Deploy directly to BSC from NEAR
+   - Free deployment (gas covered by protocol)
 
-### Frontend
-- **[Next.js 14](https://nextjs.org/)** - React framework with App Router
-- **[TypeScript](https://www.typescriptlang.org/)** - Type-safe JavaScript
-- **[Tailwind CSS](https://tailwindcss.com/)** - Utility-first CSS framework
-- **[Framer Motion](https://www.framer.com/motion/)** - Animation library
-- **[Radix UI](https://www.radix-ui.com/)** - Accessible component primitives
+### Supported Chain Signatures Networks
+- BSC Mainnet & Testnet
+- Arbitrum
+- Aurora Testnet
 
-### Web3 Integration
-- **[Wagmi](https://wagmi.sh/)** - React hooks for Ethereum
-- **[RainbowKit](https://www.rainbowkit.com/)** - Wallet connection interface
-- **[Viem](https://viem.sh/)** - TypeScript interface for Ethereum
+## Testing on BSC Testnet
 
-### AI & APIs
-- **[ChainGPT API](https://chaingpt.org/)** - AI-powered crypto intelligence
-- **Custom Proxy Service** - Railway-hosted API proxy
-- **WebSocket Integration** - Real-time data updates
+1. **Get Test BNB**
+   - Visit [BSC Testnet Faucet](https://testnet.bnbchain.org/faucet-smart)
+   - Request test BNB tokens
 
-## 📁 Project Structure
+2. **Switch to Testnet**
+   - Network: BSC Testnet
+   - Chain ID: 97
+   - RPC: https://data-seed-prebsc-1-s1.binance.org:8545/
+
+3. **Deploy Test Contracts**
+   - All features available
+   - Free deployment on testnet
+   - Full BSCScan integration
+
+## Project Structure
 
 ```
-saas-dapp/
+mintroai-dapp/
 ├── app/                    # Next.js App Router
-│   ├── api/               # API routes
-│   ├── globals.css        # Global styles
-│   ├── layout.tsx         # Root layout
-│   ├── page.tsx           # Home page
-│   └── providers.tsx      # Context providers
+│   ├── api/               # API routes (pricing, signatures)
+│   └── providers.tsx      # BSC & wallet providers
 ├── components/            # React components
-│   ├── ui/               # Reusable UI components
-│   ├── ai-chat.tsx       # AI chat interface
 │   ├── token-creation-form.tsx
-│   └── ...
+│   ├── vesting-creation-form.tsx
+│   └── ai-chat.tsx
+├── config/               
+│   ├── networks.ts       # BSC & network configuration
+│   ├── pricing.ts        # Dynamic pricing logic
+│   └── factory-abi.ts    # Contract interfaces
 ├── hooks/                # Custom React hooks
-├── config/               # Configuration files
-├── public/               # Static assets
-└── lib/                  # Utility functions
+└── lib/                  # Utilities
 ```
 
-## 🔧 Configuration
+## Security
 
-### Wallet Configuration
+### Smart Contract Security
+- **Audited factory contracts** on BSC
+- **OpenZeppelin standards** for all contracts
+- **Signature-based payments** prevent unauthorized deployments
+- **Anti-bot mechanisms** protect against MEV
 
-The platform supports multiple EVM-compatible networks. Configure networks in `app/providers.tsx`:
+### BSC Security Features
+- **BSC validator verification**
+- **Time-locked functions** for admin operations
+- **Emergency pause** capability
+- **Upgradeable proxy patterns** for safety
 
-```typescript
-const config = getDefaultConfig({
-  appName: 'MintroAI DApp',
-  projectId: process.env.NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID,
-  chains: [arbitrum, bscTestnet], // Add your preferred chains
-  ssr: true,
-})
-```
+## Contributing
 
-### API Configuration
-
-Configure API endpoints in your environment variables:
-
-- `NEXT_PUBLIC_CHAT_URL`: Token creation AI endpoint
-- `NEXT_PUBLIC_CHAT_URL_GENERAL`: General purpose AI endpoint  
-- `NEXT_PUBLIC_WEBSOCKET_URL`: Real-time updates
-- `NEXT_PUBLIC_CONTRACT_GENERATOR_URL`: Smart contract generation
-
-## 🚀 Deployment
-
-### Vercel (Recommended)
-
-1. **Deploy to Vercel**
-   ```bash
-   npm run build
-   ```
-
-2. **Configure environment variables** in Vercel dashboard
-
-3. **Deploy**
-   
-   The platform will be automatically deployed on push to main branch.
-
-### Docker
-
-```bash
-# Build the image
-docker build -t mintro-ai .
-
-# Run the container
-docker run -p 3000:3000 mintro-ai
-```
-
-### Manual Deployment
-
-```bash
-# Build the application
-npm run build
-
-# Start the production server
-npm run start
-```
-
-## 🧪 Testing
-
-```bash
-# Run tests
-npm run test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run tests with coverage
-npm run test:coverage
-```
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md).
 
 ### Development Workflow
+1. Fork the repository
+2. Create feature branch: `git checkout -b feature/bsc-improvement`
+3. Commit changes: `git commit -m 'Add BSC feature'`
+4. Push branch: `git push origin feature/bsc-improvement`
+5. Open Pull Request
 
-1. **Fork the repository**
-2. **Create a feature branch**: `git checkout -b feature/amazing-feature`
-3. **Commit your changes**: `git commit -m 'Add amazing feature'`
-4. **Push to the branch**: `git push origin feature/amazing-feature`
-5. **Open a Pull Request**
+## License
 
-### Code Style
+This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 
-- Use **TypeScript** for type safety
-- Follow **ESLint** and **Prettier** configurations
-- Write **meaningful commit messages**
-- Add **tests** for new features
-
-## 📚 Documentation
-
-### API Reference
-- [Token Creation API](docs/api/token-creation.md)
-- [Market Data API](docs/api/market-data.md)
-- [Security API](docs/api/security.md)
-
-### Guides
-- [Creating Your First Token](docs/guides/first-token.md)
-- [Advanced Token Features](docs/guides/advanced-features.md)
-- [Multi-Chain Deployment](docs/guides/multi-chain.md)
-
-## 🔒 Security
-
-### Reporting Security Issues
-
-Please report security vulnerabilities to: security@mintro.ai
-
-### Security Features
-- **Audited Smart Contract Templates**
-- **Automated Security Scanning**
-- **Best Practice Enforcement**
-- **Regular Security Updates**
-
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **[ChainGPT](https://chaingpt.org/)** - AI-powered crypto intelligence
-- **[Next.js Team](https://nextjs.org/)** - Amazing React framework
-- **[Vercel](https://vercel.com/)** - Deployment platform
-- **[Tailwind CSS](https://tailwindcss.com/)** - Styling framework
-
-## 📞 Support
+## Support & Links
 
 - **Website**: [https://mintro.ai](https://mintro.ai)
-- **Email**: support@mintro.ai
+- **GitHub**: [https://github.com/MintroAI/mintroai-dapp](https://github.com/MintroAI/mintroai-dapp)
 - **Twitter**: [@MintroAI](https://x.com/MintroAI)
 
 ---
 
 <div align="center">
 
-**Made with ❤️ by the MintroAI Team**
+[Deploy on BSC](https://mintro.ai) • [Deploy via NEAR](https://mintro.ai) • [BSCScan](https://bscscan.com/address/0xCe60855D40fa04c18990F94e673c769d91c37737) • [NEAR Explorer](https://explorer.near.org/)
 
-[⭐ Star us on GitHub](https://github.com/truthdeal/mintroai-dapp) • [🐦 Follow on Twitter](https://x.com/MintroAI) • [💬 Join Discord](https://discord.gg/mintro)
+**Bridging the Gap Between NEAR and EVM Chains**
 
 </div>
