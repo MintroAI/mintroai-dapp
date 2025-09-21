@@ -46,38 +46,30 @@ export async function POST(request: NextRequest) {
   try {
     const contractData: ContractData = await request.json();
 
-    // Check if external service URL is configured
-    const contractGeneratorUrl = process.env.NEXT_PUBLIC_CONTRACT_GENERATOR_URL;
+    // Get auth header from request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Use FastAPI backend
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
     
-    if (!contractGeneratorUrl) {
-      // Return mock response for development/testing
-      return NextResponse.json({
-        success: true,
-        contractCode: `// Mock ERC20 Token Contract for ${contractData.contractType === 'token' ? contractData.tokenName : 'Contract'}
-pragma solidity ^0.8.0;
-
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
-
-contract ${contractData.contractType === 'token' ? contractData.tokenName.replace(/[^a-zA-Z0-9]/g, '') : 'MockContract'} is ERC20, Ownable {
-    constructor() ERC20("${contractData.contractType === 'token' ? contractData.tokenName : 'Mock Token'}", "${contractData.contractType === 'token' ? contractData.tokenSymbol : 'MOCK'}") {
-        _mint(msg.sender, ${contractData.contractType === 'token' ? contractData.initialSupply : '1000000'} * 10**decimals());
-    }
-}`,
-        message: 'Mock contract generated successfully'
-      });
-    }
-
-    const response = await fetch(`${contractGeneratorUrl}/api/generate-contract`, {
+    const response = await fetch(`${backendUrl}/api/v1/generate-contract`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': authHeader,
       },
       body: JSON.stringify(contractData),
     });
 
     if (!response.ok) {
-      throw new Error('Contract generator service error');
+      const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+      throw new Error(errorData.detail || 'Contract generation failed');
     }
 
     const data = await response.json();

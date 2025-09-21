@@ -83,7 +83,7 @@ export function TokenCreationForm() {
   const { address } = useAccount()
   const chainId = useChainId()
   const { accountId, selector } = useNearWallet()
-  const { isAuthenticated } = useAuth()
+  const { isAuthenticated, authToken } = useAuth()
   const [showAuthModal, setShowAuthModal] = React.useState(false)
   const [walletError, setWalletError] = React.useState<string | null>(null)
   
@@ -313,11 +313,18 @@ export function TokenCreationForm() {
         cooldownTime: form.getValues().cooldownTime,
       };
 
+      // Check authentication before proceeding
+      if (!isAuthenticated || !authToken) {
+        setShowAuthModal(true);
+        return;
+      }
+
       // 1. Contract Creation
       const createResponse = await fetch('/api/create-contract', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(contractData),
       });
