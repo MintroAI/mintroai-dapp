@@ -11,18 +11,30 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const response = await fetch(
-      `${process.env.NEXT_PUBLIC_CONTRACT_GENERATOR_URL}/api/compile-contract/${chatId}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      }
-    );
+    // Get auth header from request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+
+    // Use FastAPI backend for contract compilation
+    const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
+    
+    const response = await fetch(`${backendUrl}/api/v1/compile-contract`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': authHeader,
+      },
+      body: JSON.stringify({ chat_id: chatId }),
+    });
 
     if (!response.ok) {
-      throw new Error('Contract compilation failed');
+      const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+      throw new Error(`Backend compilation failed: ${response.status} - ${errorData.error || response.statusText}`);
     }
 
     const data = await response.json();

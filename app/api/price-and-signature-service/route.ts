@@ -6,7 +6,6 @@ export async function POST(request: NextRequest) {
 
 
     if (!contractData) {
-      console.error('contractData is missing');
       return NextResponse.json(
         { error: 'contractData is required' },
         { status: 400 }
@@ -14,7 +13,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!bytecode) {
-      console.error('bytecode is missing');
       return NextResponse.json(
         { error: 'bytecode is required' },
         { status: 400 }
@@ -22,7 +20,6 @@ export async function POST(request: NextRequest) {
     }
 
     if (!contractData.ownerAddress) {
-      console.error('ownerAddress is missing in contractData');
       return NextResponse.json(
         { error: 'ownerAddress is required in contractData' },
         { status: 400 }
@@ -30,10 +27,18 @@ export async function POST(request: NextRequest) {
     }
 
     if (!contractData.chainId) {
-      console.error('chainId is missing in contractData');
       return NextResponse.json(
         { error: 'chainId is required in contractData' },
         { status: 400 }
+      );
+    }
+
+    // Get auth header from request
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
 
@@ -81,13 +86,13 @@ export async function POST(request: NextRequest) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        'Authorization': authHeader,
       },
       body: JSON.stringify(requestPayload),
     });
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('Signature service error response:', errorText);
       throw new Error(`Signature service error: ${response.status} - ${errorText}`);
     }
 
