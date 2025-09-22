@@ -56,7 +56,7 @@ export function useChainSignatures() {
       
       try {
         // Use proper FastAPI backend URL
-        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000';
+        const backendUrl = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8080';
         const fundingResponse = await fetch(`${backendUrl}/api/v1/fund-address`, {
           method: 'POST',
           headers: {

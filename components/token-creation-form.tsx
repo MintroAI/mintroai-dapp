@@ -342,6 +342,7 @@ export function TokenCreationForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({ chatId: sessionId }),
       });
@@ -360,6 +361,7 @@ export function TokenCreationForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({ contractData, bytecode: compileData.bytecode }),
       });

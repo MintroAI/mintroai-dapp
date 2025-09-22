@@ -23,6 +23,7 @@ import { useAccount, useChainId } from 'wagmi'
 import { useTokenDeploy } from '@/hooks/useTokenDeploy'
 import { useWebSocket } from "@/hooks/useWebSocket"
 import { useVestingPricing } from '@/hooks/usePricing'
+import { useAuth } from '@/contexts/AuthContext'
 
 const vestingFormSchema = z.object({
   projectName: z.string().min(1, "Project name is required"),
@@ -49,6 +50,7 @@ export function VestingCreationForm() {
   const { sessionId, isInitialized } = useSession()
   const { address } = useAccount()
   const chainId = useChainId()
+  const { authToken } = useAuth()
   const { deploy, isPending, isWaiting, isSuccess, error, hash, receipt } = useTokenDeploy()
   
   const [showConfirmation, setShowConfirmation] = React.useState(false)
@@ -293,6 +295,7 @@ export function VestingCreationForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify(contractData),
       });
@@ -310,6 +313,7 @@ export function VestingCreationForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authToken}`,
         },
         body: JSON.stringify({ chatId: sessionId }),
       });

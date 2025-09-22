@@ -69,11 +69,18 @@ export async function POST(request: NextRequest) {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-      throw new Error(errorData.detail || 'Contract generation failed');
+      throw new Error(errorData.detail || errorData.message || 'Contract generation failed');
     }
 
     const data = await response.json();
-    return NextResponse.json(data);
+    
+    
+    // Wrap backend response in expected format
+    return NextResponse.json({
+      success: true,
+      contractCode: data.contract || data.contractCode,
+      message: data.message || 'Contract generated successfully'
+    });
   } catch (error: unknown) {
     console.error('Error in contract generation:', error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to generate contract';
