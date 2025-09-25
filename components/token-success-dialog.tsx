@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils"
 import { motion } from "framer-motion"
 import confetti from 'canvas-confetti'
 import { useChainId } from 'wagmi'
-import { type Chain, /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, bsc, auroraTestnet, theta, thetaTestnet } from 'viem/chains'
+import { type Chain, /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bscTestnet, bsc, auroraTestnet, theta, soneium } from 'viem/chains'
 import { hyperEVM } from '@/config/customChains'
 import { ExternalLink } from 'lucide-react'
 import { useNearWallet } from '@/contexts/NearWalletContext'
@@ -55,7 +55,7 @@ export function TokenSuccessDialog({
       [auroraTestnet.id]: auroraTestnet,
       [hyperEVM.id]: hyperEVM,
       [theta.id]: theta,
-      [thetaTestnet.id]: thetaTestnet,
+      [soneium.id]: soneium,
     }
     
     const chain = chains[chainId]
