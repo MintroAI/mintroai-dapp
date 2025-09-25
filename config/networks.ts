@@ -1,4 +1,4 @@
-import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bsc, bscTestnet, auroraTestnet, theta, thetaTestnet } from 'viem/chains'
+import { /* mainnet, polygon, optimism, */ arbitrum, /* base, zora, */ bsc, bscTestnet, auroraTestnet, theta, thetaTestnet, soneium } from 'viem/chains'
 import { type Chain } from 'viem'
 import { hyperEVM } from './customChains'
 import { parseUnits } from 'ethers'
@@ -82,7 +82,7 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
     factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Aurora Testnet factory address
     chainSignaturesGasPrice: parseUnits('0.07', 'gwei'),
     chainSignaturesGasLimit: 2000000, // 2M Gas
-    chainSignaturesFundingAmount: parseUnits('0.0025', 'ether')
+    chainSignaturesFundingAmount: parseUnits('0.0001', 'ether')
   },
   // Theta Mainnet
   [theta.id]: {
@@ -99,5 +99,13 @@ export const SUPPORTED_NETWORKS: { [key: number]: NetworkConfig } = {
       iconUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/2416.png',
     } as Chain,
     factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Theta Testnet factory address
+  },
+  // Soneium Mainnet
+  [soneium.id]: {
+    chain: {
+      ...soneium,
+      iconUrl: 'https://s2.coinmarketcap.com/static/img/coins/64x64/35635.png',
+    } as Chain,
+    factoryAddress: "0xCe60855D40fa04c18990F94e673c769d91c37737" as `0x${string}`, // Soneium Mainnet factory address
   }
 } 
