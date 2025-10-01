@@ -192,18 +192,31 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
         </div>
       </ScrollArea>
 
-      <div className="p-4 border-t border-white/10">
-        <form onSubmit={handleSubmit} className="flex gap-2">
-          <Input
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            placeholder="Type your message..."
-            className="flex-1 bg-white/5 border-white/10 text-white/90 placeholder:text-white/50"
-          />
-          <Button type="submit" size="icon" className="bg-primary hover:bg-primary/90 text-white">
-            <Send className="w-4 h-4" />
-          </Button>
-        </form>
+      <div className="p-3 border-t border-white/10">
+        <div className="relative group">
+          <div className="absolute -inset-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-red-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 animate-gradient-xy transition-opacity duration-500"></div>
+          <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-lg opacity-70 animate-pulse-slow"></div>
+          
+          <div className="relative bg-black/95 rounded-lg p-[2px] backdrop-blur-xl">
+            <form onSubmit={handleSubmit} className="flex gap-2 bg-black/90 rounded-md p-1 backdrop-blur-sm">
+              <Input
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                placeholder="Type your message..."
+                className="flex-1 bg-white/5 border-0 text-white/90 placeholder:text-white/50 focus:ring-0 focus:ring-offset-0 focus:bg-white/10 transition-all duration-300 h-9 text-sm"
+              />
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20 hover:border-white/40 
+                  transition-all duration-300 rounded-md h-9 w-9 flex items-center justify-center
+                  hover:shadow-lg hover:shadow-white/10 group"
+              >
+                <Send className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </Button>
+            </form>
+          </div>
+        </div>
       </div>
     </div>
   )

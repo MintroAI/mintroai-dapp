@@ -715,18 +715,32 @@ export function TokenCreationForm() {
           </Accordion>
 
           <div className="pt-6">
-            <Button
-              type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-white font-semibold
-                transition-all duration-300 hover:shadow-[0_0_20px_rgba(124,58,237,0.3)]
-                relative overflow-hidden group"
-            >
-              <span className="relative z-10">
-                Create Token {priceDisplay && `(${priceDisplay})`}
-              </span>
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/0 via-white/10 to-primary/0 
-                translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-            </Button>
+            <div className="relative group">
+              {/* Magical animated gradient border */}
+              <div className="absolute -inset-[2px] bg-gradient-to-r from-pink-500 via-purple-500 to-red-500 rounded-lg opacity-75 blur-sm group-hover:opacity-100 animate-gradient-xy transition-opacity duration-500"></div>
+              <div className="absolute -inset-[1px] bg-gradient-to-r from-purple-600 via-pink-600 to-red-600 rounded-lg opacity-70 animate-pulse-slow"></div>
+              
+              {/* Inner container with background to hide the gradient inside */}
+              <div className="relative bg-black rounded-lg p-[1px]">
+                <Button
+                  type="submit"
+                  className="w-full bg-black/90 hover:bg-black/80 backdrop-blur-sm text-white font-semibold py-4
+                    transition-all duration-300 rounded-lg border border-white/10 hover:border-white/20
+                    group-hover:shadow-lg group-hover:shadow-purple-500/20"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2">
+                    <span className="text-gray-300 font-medium text-base">
+                      Create Token
+                    </span>
+                    {priceDisplay && (
+                      <span className="px-2 py-0.5 bg-white/10 backdrop-blur-sm rounded text-xs font-medium text-gray-400 border border-white/10">
+                        {priceDisplay}
+                      </span>
+                    )}
+                  </span>
+                </Button>
+              </div>
+            </div>
           </div>
         </form>
       </Form>
