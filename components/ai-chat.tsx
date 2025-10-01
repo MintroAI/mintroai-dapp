@@ -205,8 +205,14 @@ export function AIChat({ creationType, inputValue, setInputValue }: AIChatProps)
                 placeholder="Type your message..."
                 className="flex-1 bg-white/5 border-0 text-white/90 placeholder:text-white/50 focus:ring-0 focus:ring-offset-0 focus:bg-white/10 transition-all duration-300"
               />
-              <Button type="submit" size="icon" className="bg-primary hover:bg-primary/90 text-white hover:shadow-[0_0_20px_rgba(168,85,247,0.5)] transition-all duration-300">
-                <Send className="w-4 h-4" />
+              <Button 
+                type="submit" 
+                size="icon" 
+                className="bg-white/10 hover:bg-white/20 backdrop-blur-sm text-white border border-white/20 hover:border-white/40 
+                  transition-all duration-300 rounded-lg h-10 w-10 flex items-center justify-center
+                  hover:shadow-lg hover:shadow-white/10 group"
+              >
+                <Send className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
               </Button>
             </form>
           </div>
