@@ -832,7 +832,7 @@ export function VestingCreationForm() {
                       group-hover:shadow-lg group-hover:shadow-purple-500/20"
                   >
                     <span className="relative z-10 flex items-center justify-center gap-2">
-                      <span className="text-gray-300 font-medium">
+                      <span className="text-gray-300 font-medium text-base">
                         Create Vesting Contract
                       </span>
                       {priceDisplay && (
