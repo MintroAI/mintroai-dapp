@@ -5,6 +5,65 @@
 /* NEAR Wallet Selector Modal Styles */
 @import "@near-wallet-selector/modal-ui/styles.css";
 
+/* Magical Gradient Animation */
+@keyframes gradient-xy {
+  0%, 100% {
+    background: linear-gradient(90deg, #ec4899, #a855f7, #ef4444, #ec4899);
+    background-size: 400% 400%;
+    background-position: 0% 50%;
+  }
+  25% {
+    background: linear-gradient(180deg, #a855f7, #ef4444, #ec4899, #a855f7);
+    background-size: 400% 400%;
+    background-position: 50% 0%;
+  }
+  50% {
+    background: linear-gradient(270deg, #ef4444, #ec4899, #a855f7, #ef4444);
+    background-size: 400% 400%;
+    background-position: 100% 50%;
+  }
+  75% {
+    background: linear-gradient(360deg, #ec4899, #a855f7, #ef4444, #ec4899);
+    background-size: 400% 400%;
+    background-position: 50% 100%;
+  }
+}
+
+@keyframes spin-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulse-slow {
+  0%, 100% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+.animate-gradient-xy {
+  animation: gradient-xy 4s ease infinite;
+  background-size: 400% 400%;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 10s linear infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 2s ease-in-out infinite;
+}
+
+.bg-gradient-conic {
+  background: conic-gradient(from 180deg at 50% 50%, #ec4899 0deg, #a855f7 120deg, #ef4444 240deg, #ec4899 360deg);
+}
+
 @layer base {
   :root {
     --background: 240 10% 3.9%;
